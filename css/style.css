@@ -1,0 +1,750 @@
+/* =========================================
+   1. VARIÁVEIS GERAIS (Paleta de Cores)
+   ========================================= */
+:root {
+  --bg-body: #09090a; /* Fundo geral da página */
+  --bg-card: #202024; /* Fundo das caixas (cards) */
+  --bg-input: #121214; /* Fundo mais escuro para os campos de digitar */
+  --border: #323238; /* Cor das linhas de separação */
+  --text-primary: #e1e1e6; /* Cor principal dos textos */
+  --text-secondary: #8d8d99; /* Cor dos textos menores/ícones */
+  --primary: #f10707; /* Vermelho padrão AUTOCAR */
+}
+
+/* =========================================
+   2. RESET BÁSICO (Limpando o navegador)
+   ========================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* =========================================
+   3. ESTILOS GERAIS
+   ========================================= */
+body {
+  font-family: "Segoe UI", "Roboto", sans-serif;
+  background-color: var(--bg-body);
+  color: var(--text-primary);
+  padding: 20px;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ADICIONE ESTE BLOCO AQUI 👇 */
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Esse é o respiro entre os cartões! */
+}
+
+/* =========================================
+   4. CABEÇALHO (Header)
+   ========================================= */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 15px;
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-texto {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.icon-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.icon-btn {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none; /* Garante que links <a> não fiquem com linha embaixo */
+}
+
+/* O que acontece ao passar o mouse nos botões normais */
+.icon-btn:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+/* O que acontece ENQUANTO você clica no botão (Efeito de afundar) */
+.icon-btn:active {
+  transform: scale(0.92);
+}
+
+/* Efeito específico para o botão de LIMPAR TUDO (Alerta visual) */
+.icon-btn.btn-danger:hover {
+  color: #ff3b3b;
+  border-color: #ff3b3b;
+  background: rgba(255, 59, 59, 0.1); /* Fundo vermelho transparente */
+}
+
+/* =========================================
+   5. CARTÕES (Seções do formulário)
+   ========================================= */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.card h2 {
+  font-size: 1.1rem;
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card h2 i {
+  color: var(--primary);
+}
+
+/* =========================================
+   6. FORMULÁRIOS E GRID (O sistema de grade)
+   ========================================= */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 15px;
+}
+
+.form-control {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.form-control label {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  font-weight: bold;
+}
+
+.form-control input,
+.form-control select {
+  width: 100%;
+  padding: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  outline: none;
+  text-transform: uppercase;
+  font-family: inherit;
+  transition: 0.2s;
+}
+
+.form-control input:focus,
+.form-control select:focus {
+  border-color: var(--primary);
+}
+
+.form-control input[readonly] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* =========================================
+   7. BOTÕES DE OPÇÃO (Radio/Checkbox)
+   ========================================= */
+.options-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 15px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  cursor: pointer;
+
+  /* Prefixos para compatibilidade com navegadores */
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  transition: 0.2s;
+  font-size: 0.85rem;
+  font-weight: bold;
+}
+
+.opt:hover {
+  border-color: var(--primary);
+}
+
+.opt input[type="radio"],
+.opt input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* =========================================
+   8. ELEMENTOS ESPECIAIS (Textarea, Alertas e Botões)
+   ========================================= */
+
+/* Estilizando a caixa de texto grande */
+.form-control textarea {
+  width: 100%;
+  padding: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-primary);
+  outline: none;
+  font-family: inherit;
+  transition: 0.2s;
+  min-height: 100px; /* Altura mínima */
+  resize: vertical; /* Permite que o usuário aumente a caixa apenas para baixo */
+}
+
+.form-control textarea:focus {
+  border-color: var(--primary);
+}
+
+/* Classe utilitária para fazer um item ocupar todas as colunas do Grid */
+.full-width {
+  grid-column: 1 / -1;
+}
+
+/* Caixa de alerta (Aviso de Diagnóstico) */
+.alert-warning {
+  background: rgba(245, 158, 11, 0.1); /* Fundo laranja transparente */
+  border: 1px solid #f59e0b; /* Borda laranja */
+  padding: 15px;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.alert-warning strong {
+  color: #f59e0b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Botões */
+.actions {
+  display: flex;
+  justify-content: flex-end; /* Empurra o botão para a direita */
+}
+
+.btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 6px;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  font-size: 0.9rem;
+  transition: 0.2s;
+}
+
+.btn-primary {
+  background: var(--primary);
+  color: #fff; /* Texto sempre branco, independente do tema */
+}
+
+.btn-primary:hover {
+  filter: brightness(0.8); /* Escurece a cor um pouquinho ao passar o mouse */
+}
+
+/* =========================================
+   9. BADGES (Etiquetas de Status) e Botão Secundário
+   ========================================= */
+.badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  background: var(--bg-input);
+  letter-spacing: 0.5px; /* Dá um espacinho elegante entre as letras */
+}
+
+/* Status: Editando um Rascunho (Amarelo/Laranja) */
+.badge.draft {
+  border-color: #f59e0b;
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+}
+
+/* Status: Editando um Finalizado (Verde) */
+.badge.final {
+  border-color: #10b981;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+/* Botão Secundário (Transparente com borda) */
+.btn-secondary {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+}
+
+.btn-secondary:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+/* =========================================
+   10. MARCADOR DE COMBUSTÍVEL (Gauge)
+   ========================================= */
+.gauge-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  padding: 20px;
+  border-radius: 8px;
+  grid-column: 1 / -1; /* Força a ocupar a largura total do grid */
+  margin-top: 10px;
+}
+
+.gauge-body {
+  width: 220px;
+  height: 110px;
+  position: relative;
+  overflow: hidden;
+  /* Esse radial-gradient cria o efeito de um buraco no meio do círculo */
+  background: radial-gradient(
+    circle at 50% 100%,
+    transparent 45%,
+    var(--bg-card) 46%
+  );
+  border-radius: 220px 220px 0 0; /* Arredonda só o topo para fazer meia-lua */
+  border: 2px solid var(--border);
+  border-bottom: none;
+}
+
+.gauge-ticks {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+}
+
+/* Os tracinhos (marcadores de volume) */
+.tick {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 2px;
+  height: 8px;
+  background: var(--text-secondary);
+  transform-origin: bottom center;
+  opacity: 0.6;
+}
+
+.tick.major {
+  height: 14px;
+  width: 3px;
+  opacity: 1;
+}
+
+/* Girando cada tracinho para a posição correta como em um relógio */
+.tick.t-0 {
+  transform: rotate(-90deg) translate(0, -94px);
+  background: #ef4444;
+} /* Vazio (Vermelho) */
+.tick.t-1 {
+  transform: rotate(-67.5deg) translate(0, -94px);
+}
+.tick.t-2 {
+  transform: rotate(-45deg) translate(0, -94px);
+}
+.tick.t-3 {
+  transform: rotate(-22.5deg) translate(0, -94px);
+}
+.tick.t-4 {
+  transform: rotate(0deg) translate(0, -94px);
+  height: 14px;
+} /* Meio Tanque */
+.tick.t-5 {
+  transform: rotate(22.5deg) translate(0, -94px);
+}
+.tick.t-6 {
+  transform: rotate(45deg) translate(0, -94px);
+}
+.tick.t-7 {
+  transform: rotate(67.5deg) translate(0, -94px);
+}
+.tick.t-8 {
+  transform: rotate(90deg) translate(0, -94px);
+  background: #10b981;
+} /* Cheio (Verde) */
+
+/* O Ponteiro */
+.gauge-needle {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 4px;
+  height: 95px;
+  background: var(--primary);
+  transform-origin: bottom center;
+  transform: rotate(
+    -90deg
+  ); /* Posição inicial: deitado para a esquerda (Vazio) */
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); /* Deixa o movimento muito suave e realista */
+  border-radius: 4px;
+  z-index: 2;
+}
+
+.gauge-center {
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  width: 24px;
+  height: 24px;
+  background: var(--text-primary);
+  border-radius: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+}
+
+.gauge-labels {
+  width: 240px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: bold;
+  color: var(--text-secondary);
+  margin-top: -5px;
+  padding: 0 10px;
+}
+
+/* Área da barra de rolagem (Slider) */
+.fuel-control {
+  width: 100%;
+  max-width: 300px;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.fuel-text {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+
+/* Deixando a barra de rolagem nativa com a cara do nosso sistema */
+input[type="range"] {
+  -webkit-appearance: none;
+  width: 100%;
+  background: transparent;
+  cursor: pointer;
+}
+
+input[type="range"]:focus {
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-runnable-track {
+  width: 100%;
+  height: 8px;
+  background: var(--border);
+  border-radius: 4px;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  height: 24px;
+  width: 24px;
+  border-radius: 50%;
+  background: var(--primary);
+  -webkit-appearance: none;
+  margin-top: -8px;
+  border: 3px solid var(--bg-card);
+}
+
+/* =========================================
+   11. ÍCONES DENTRO DOS CAMPOS (Inputs com busca)
+   ========================================= */
+.input-icon-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* O input que está dentro desse grupo precisa de um espaço extra na direita */
+.input-icon-group input {
+  padding-right: 40px;
+}
+
+/* O ícone flutua à direita */
+.input-icon-group i {
+  position: absolute;
+  right: 12px;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  /* Isso aqui é mágico: faz o clique do mouse "atravessar" o ícone.
+       Assim, se o usuário clicar em cima da lupa, o input continua sendo selecionado */
+  pointer-events: none;
+}
+
+/* Uma classe de estilo para quando o sistema estiver buscando os dados (vai ficar com a borda azul) */
+.input-loading {
+  border-color: #3b82f6 !important;
+}
+
+/* =========================================
+   12. MODAIS (Telas Flutuantes) E TABELAS
+   ========================================= */
+
+/* Fundo escuro transparente que cobre a tela toda */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.85); /* 85% de escuridão */
+  z-index: 2000; /* Garante que fique na frente de qualquer outra coisa */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+/* Classe utilitária MÁGICA: tudo que tiver ela, some da tela */
+.hidden {
+  display: none !important;
+}
+
+/* A caixa principal da janela flutuante */
+.modal-form {
+  background: var(--bg-card);
+  padding: 25px;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 900px;
+  max-height: 90vh; /* Limita a altura a 90% da tela para não sumir o botão de fechar */
+  overflow-y: auto; /* Se o conteúdo for maior, cria uma barra de rolagem interna */
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8); /* Dá uma sombra bonita de elevação */
+}
+
+/* O cabeçalho da modal (Título e Botão X) */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.btn-close-modal {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  cursor: pointer;
+  font-size: 1.5rem;
+  transition: 0.2s;
+}
+
+.btn-close-modal:hover {
+  color: var(--primary);
+}
+
+/* Estilizando as Tabelas de Histórico */
+.table-container {
+  overflow-x: auto; /* Se a tela for pequena (celular), cria rolagem horizontal para a tabela não quebrar o layout */
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-body);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse; /* Tira o espaço estranho entre as bordas padrão do HTML */
+}
+
+th,
+td {
+  padding: 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+/* Cabeçalho da tabela */
+th {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+/* Arrumando a Barra de Busca dentro da Modal */
+.search-wrapper {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 12px 15px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.search-wrapper i {
+  color: var(--text-secondary);
+  font-size: 1.3rem;
+}
+
+.search-wrapper input {
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  width: 100%;
+  outline: none;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+}
+
+/* Estilo do Rodapé de Paginação */
+.pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+}
+
+.page-info {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-weight: bold;
+}
+
+/* =========================================
+   13. SLOTS DE FOTOS (Uploads específicos)
+   ========================================= */
+.photo-grid {
+  display: grid;
+  /* Cria colunas que se adaptam sozinhas. No celular fica 2 ou 3, no PC ficam 5 */
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.photo-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  aspect-ratio: 1 / 1; /* Força a caixa a ser um quadrado perfeito */
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: 0.2s;
+  text-align: center;
+  padding: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-slot:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: rgba(250, 20, 20, 0.05); /* Fundo avermelhado bem fraquinho */
+}
+
+.photo-slot i {
+  font-size: 2rem;
+}
+
+.photo-slot span {
+  font-size: 0.75rem;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* =========================================
+   14. ANIMAÇÕES (Loading)
+   ========================================= */
+/* Faz qualquer ícone girar infinitamente */
+.ph-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

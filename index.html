@@ -1,0 +1,782 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AutoCar BS - Checklist Entrada</title>
+
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <header class="header">
+        <div class="logo-texto">AUTOCAR BS</div>
+
+        <div class="header-actions">
+          <a href="#" class="icon-btn" title="Gestão de Clientes">
+            <i class="ph ph-users"></i>
+          </a>
+
+          <button
+            type="button"
+            class="icon-btn"
+            id="btn-tema"
+            title="Mudar Tema"
+          >
+            <i class="ph ph-sun" id="icone-tema"></i>
+          </button>
+
+          <button
+            type="button"
+            class="icon-btn"
+            id="btn-historico"
+            title="Histórico de Checklists"
+          >
+            <i class="ph ph-clock-counter-clockwise"></i>
+          </button>
+
+          <button
+            type="button"
+            class="icon-btn btn-danger"
+            id="btn-limpar"
+            title="Limpar Formulário"
+          >
+            <i class="ph ph-broom"></i>
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <section class="card">
+          <h2><i class="ph ph-note-pencil"></i> Modo do Registro</h2>
+          <div
+            class="options-row"
+            style="
+              justify-content: space-between;
+              align-items: center;
+              width: 100%;
+            "
+          >
+            <label class="opt">
+              <input type="checkbox" id="check_rascunho" />
+              Salvar como RASCUNHO (Incompleto)
+            </label>
+            <div
+              style="
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                flex-wrap: wrap;
+              "
+            >
+              <span
+                id="status-edicao"
+                class="badge"
+                title="Status atual do registro"
+                >NOVO</span
+              >
+              <button
+                class="btn btn-secondary"
+                type="button"
+                id="btn-cancelar-edicao"
+                style="display: none; padding: 8px 12px; font-size: 0.8rem"
+              >
+                <i class="ph ph-x-circle"></i> Cancelar edição
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2><i class="ph ph-clock"></i> Entrada</h2>
+          <div class="form-grid">
+            <div class="form-control">
+              <label for="mecanico_responsavel">Mecânico Responsável</label>
+              <input
+                type="text"
+                id="mecanico_responsavel"
+                placeholder="Nome do Mecânico"
+              />
+            </div>
+            <div class="form-control">
+              <label for="data_entrada">Data Entrada (Automático)</label>
+              <input
+                type="text"
+                id="data_entrada"
+                readonly
+                placeholder="DD/MM/AAAA"
+              />
+            </div>
+            <div class="form-control">
+              <label for="horario_entrada">Horário Entrada (Automático)</label>
+              <input
+                type="text"
+                id="horario_entrada"
+                readonly
+                placeholder="HH:MM"
+              />
+            </div>
+            <div class="form-control">
+              <label>Chegou de Guincho?</label>
+              <div class="options-row">
+                <label class="opt"
+                  ><input type="radio" name="guincho" value="SIM" /> SIM</label
+                >
+                <label class="opt"
+                  ><input type="radio" name="guincho" value="NÃO" checked />
+                  NÃO</label
+                >
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2><i class="ph ph-user"></i> Dados do Cliente</h2>
+          <div class="form-grid">
+            <div class="form-control">
+              <label for="cliente_nome">Nome Completo (Busca Automática)</label>
+              <div class="input-icon-group">
+                <input
+                  type="text"
+                  id="cliente_nome"
+                  list="lista-clientes-sugestao"
+                  placeholder="DIGITE O NOME..."
+                  autocomplete="off"
+                />
+                <i class="ph ph-magnifying-glass" id="icon-nome-loading"></i>
+              </div>
+              <datalist id="lista-clientes-sugestao"></datalist>
+            </div>
+            <div class="form-control">
+              <label for="cliente_cpf">CPF Nº</label>
+              <input
+                type="text"
+                id="cliente_cpf"
+                placeholder="000.000.000-00"
+                data-mascara="cpf"
+                maxlength="14"
+              />
+            </div>
+            <div class="form-control">
+              <label for="cliente_telefone">Telefone Nº</label>
+              <input
+                type="text"
+                id="cliente_telefone"
+                placeholder="(00) 00000-0000"
+                data-mascara="telefone"
+                maxlength="15"
+              />
+            </div>
+            <div class="form-control">
+              <label for="cliente_cep">CEP (Busca Automática no futuro)</label>
+              <div class="input-icon-group">
+                <input
+                  type="text"
+                  id="cliente_cep"
+                  placeholder="00000-000"
+                  data-mascara="cep"
+                  maxlength="9"
+                />
+                <i class="ph ph-magnifying-glass" id="icon-cep-loading"></i>
+              </div>
+            </div>
+            <div class="form-control">
+              <label for="cliente_uf">UF</label>
+              <select id="cliente_uf">
+                <option value="">Selecione...</option>
+                <option value="SP">SP</option>
+                <option value="RJ">RJ</option>
+                <option value="MG">MG</option>
+                <option value="PR">PR</option>
+              </select>
+            </div>
+            <div class="form-control">
+              <label for="cliente_cidade">Cidade</label>
+              <input type="text" id="cliente_cidade" placeholder="Cidade" />
+            </div>
+            <div class="form-control">
+              <label for="cliente_bairro">Bairro</label>
+              <input type="text" id="cliente_bairro" placeholder="Bairro" />
+            </div>
+            <div class="form-control">
+              <label for="cliente_endereco">Endereço (Rua/Av)</label>
+              <input
+                type="text"
+                id="cliente_endereco"
+                placeholder="Rua / Avenida"
+              />
+            </div>
+            <div class="form-control">
+              <label for="cliente_numero">Nº</label>
+              <input type="text" id="cliente_numero" placeholder="Número" />
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2><i class="ph ph-car"></i> Dados do Veículo</h2>
+          <div class="form-grid">
+            <div class="form-control">
+              <label for="veiculo_placa"
+                >Placa (Busca Automática no futuro)</label
+              >
+              <div class="input-icon-group">
+                <input
+                  type="text"
+                  id="veiculo_placa"
+                  placeholder="ABC-1234"
+                  data-mascara="placa"
+                  maxlength="8"
+                />
+                <i class="ph ph-magnifying-glass" id="icon-placa-loading"></i>
+              </div>
+            </div>
+            <div class="form-control">
+              <label for="veiculo_chassi">Nº Chassi</label>
+              <input type="text" id="veiculo_chassi" placeholder="CHASSI" />
+            </div>
+            <div class="form-control">
+              <label for="veiculo_marca">Marca</label>
+              <input type="text" id="veiculo_marca" placeholder="EX: VW" />
+            </div>
+            <div class="form-control">
+              <label for="veiculo_versao">Versão</label>
+              <input
+                type="text"
+                id="veiculo_versao"
+                placeholder="EX: GOL 1.6"
+              />
+            </div>
+            <div class="form-control">
+              <label for="veiculo_km">KM Atual</label>
+              <input
+                type="text"
+                id="veiculo_km"
+                placeholder="EX: 120.000"
+                data-mascara="km"
+                maxlength="9"
+              />
+            </div>
+            <div class="form-control">
+              <label for="veiculo_ano_modelo">Ano/Modelo</label>
+              <input
+                type="text"
+                id="veiculo_ano_modelo"
+                placeholder="EX: 2012/2013"
+              />
+            </div>
+            <div class="form-control">
+              <label for="veiculo_cor">Cor</label>
+              <input type="text" id="veiculo_cor" placeholder="EX: PRATA" />
+            </div>
+            <div class="form-control">
+              <label>Combustível</label>
+              <div class="options-row">
+                <label class="opt"
+                  ><input type="radio" name="combustivel" value="ALCOOL" />
+                  ÁLCOOL</label
+                >
+                <label class="opt"
+                  ><input type="radio" name="combustivel" value="GASOLINA" />
+                  GASOLINA</label
+                >
+                <label class="opt"
+                  ><input type="radio" name="combustivel" value="FLEX" />
+                  FLEX</label
+                >
+                <label class="opt"
+                  ><input type="radio" name="combustivel" value="DIESEL" />
+                  DIESEL</label
+                >
+              </div>
+            </div>
+            <div class="form-control">
+              <label>Câmbio</label>
+              <div class="options-row">
+                <label class="opt"
+                  ><input type="radio" name="cambio" value="MANUAL" />
+                  MANUAL</label
+                >
+                <label class="opt"
+                  ><input type="radio" name="cambio" value="AUTOMATICO" />
+                  AUTOMÁTICO</label
+                >
+              </div>
+            </div>
+            <div class="form-control">
+              <label>Documento está no veículo?</label>
+              <div class="options-row">
+                <label class="opt"
+                  ><input
+                    type="radio"
+                    name="documento_no_veiculo"
+                    value="SIM"
+                  />
+                  SIM</label
+                >
+                <label class="opt"
+                  ><input
+                    type="radio"
+                    name="documento_no_veiculo"
+                    value="NÃO"
+                  />
+                  NÃO</label
+                >
+              </div>
+            </div>
+            <div class="form-control">
+              <label>Portas</label>
+              <div class="options-row">
+                <label class="opt"
+                  ><input type="radio" name="portas" value="2PORTAS" /> 2
+                  PORTAS</label
+                >
+                <label class="opt"
+                  ><input type="radio" name="portas" value="4PORTAS" /> 4
+                  PORTAS</label
+                >
+              </div>
+            </div>
+            <div class="form-control">
+              <label>Luz de painel acesa?</label>
+              <div class="options-row">
+                <label class="opt"
+                  ><input type="radio" name="luz_painel" value="SIM" />
+                  SIM</label
+                >
+                <label class="opt"
+                  ><input type="radio" name="luz_painel" value="NÃO" checked />
+                  NÃO</label
+                >
+              </div>
+            </div>
+
+            <div class="gauge-wrapper">
+              <label
+                style="
+                  margin-bottom: 15px;
+                  font-size: 0.9rem;
+                  font-weight: bold;
+                  color: var(--text-secondary);
+                  text-transform: uppercase;
+                "
+              >
+                Nível de Combustível
+              </label>
+              <div class="gauge-body">
+                <div class="gauge-ticks">
+                  <div class="tick major t-0"></div>
+                  <div class="tick t-1"></div>
+                  <div class="tick major t-2"></div>
+                  <div class="tick t-3"></div>
+                  <div class="tick major t-4"></div>
+                  <div class="tick t-5"></div>
+                  <div class="tick major t-6"></div>
+                  <div class="tick t-7"></div>
+                  <div class="tick major t-8"></div>
+                </div>
+                <div class="gauge-needle" id="gauge-pointer"></div>
+                <div class="gauge-center"></div>
+              </div>
+              <div class="gauge-labels">
+                <span>E</span><span>1/2</span><span>F</span>
+              </div>
+              <div class="fuel-control">
+                <input
+                  type="range"
+                  id="fuel-slider"
+                  min="0"
+                  max="8"
+                  step="1"
+                  value="0"
+                  oninput="atualizarMarcadorCombustivel(this.value)"
+                />
+                <div id="fuel-text-display" class="fuel-text">VAZIO</div>
+              </div>
+              <input type="hidden" id="nivel_combustivel" value="VAZIO" />
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2><i class="ph ph-camera"></i> Fotos do Veículo</h2>
+          <h3
+            style="
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              margin-bottom: 10px;
+              text-transform: uppercase;
+            "
+          >
+            Fotos Obrigatórias (5 Ângulos)
+          </h3>
+          <div class="photo-grid">
+            <input
+              type="file"
+              id="foto_frente"
+              accept="image/*"
+              capture="environment"
+              class="hidden"
+            />
+            <label for="foto_frente" class="photo-slot">
+              <i class="ph ph-car-profile" style="transform: scaleX(-1)"></i
+              ><span>Frente</span>
+            </label>
+            <input
+              type="file"
+              id="foto_traseira"
+              accept="image/*"
+              capture="environment"
+              class="hidden"
+            />
+            <label for="foto_traseira" class="photo-slot">
+              <i class="ph ph-car-profile"></i><span>Traseira</span>
+            </label>
+            <input
+              type="file"
+              id="foto_lat_esq"
+              accept="image/*"
+              capture="environment"
+              class="hidden"
+            />
+            <label for="foto_lat_esq" class="photo-slot">
+              <i class="ph ph-arrow-left"></i><span>Lat. Motorista</span>
+            </label>
+            <input
+              type="file"
+              id="foto_lat_dir"
+              accept="image/*"
+              capture="environment"
+              class="hidden"
+            />
+            <label for="foto_lat_dir" class="photo-slot">
+              <i class="ph ph-arrow-right"></i><span>Lat. Passageiro</span>
+            </label>
+            <input
+              type="file"
+              id="foto_painel"
+              accept="image/*"
+              capture="environment"
+              class="hidden"
+            />
+            <label for="foto_painel" class="photo-slot">
+              <i class="ph ph-gauge"></i><span>Painel / KM</span>
+            </label>
+          </div>
+          <hr
+            style="
+              border: 0;
+              border-top: 1px solid var(--border);
+              margin: 20px 0;
+            "
+          />
+          <h3
+            style="
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              margin-bottom: 10px;
+              text-transform: uppercase;
+            "
+          >
+            Avarias / Detalhes (Opcionais)
+          </h3>
+          <div style="display: flex; flex-direction: column; gap: 15px">
+            <input
+              type="file"
+              id="upload_fotos_extras"
+              accept="image/*"
+              multiple
+              capture="environment"
+              class="hidden"
+            />
+            <label
+              for="upload_fotos_extras"
+              class="btn btn-secondary"
+              style="width: fit-content"
+            >
+              <i class="ph ph-camera-plus" style="font-size: 1.2rem"></i>
+              Adicionar Avarias
+            </label>
+            <div
+              id="preview_fotos_extras"
+              style="
+                display: flex;
+                gap: 10px;
+                flex-wrap: wrap;
+                padding: 10px;
+                border: 1px dashed var(--border);
+                border-radius: 6px;
+                min-height: 80px;
+                align-items: center;
+                justify-content: center;
+              "
+            >
+              <span style="font-size: 0.85rem; color: var(--text-secondary)"
+                >Nenhuma foto extra.</span
+              >
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2><i class="ph ph-shield-check"></i> Autorizações e Avisos</h2>
+          <div class="form-control">
+            <label
+              >A assinatura do cliente autoriza o uso de imagem (restrição
+              placa)?</label
+            >
+            <div class="options-row">
+              <label class="opt"
+                ><input type="radio" name="auth_imagem" value="SIM" checked />
+                SIM</label
+              >
+              <label class="opt"
+                ><input type="radio" name="auth_imagem" value="NÃO" />
+                NÃO</label
+              >
+            </div>
+          </div>
+          <div class="alert-warning">
+            <strong
+              ><i class="ph ph-warning" style="font-size: 1.5rem"></i>
+              DIAGNÓSTICO TÉCNICO</strong
+            >
+            <p style="font-size: 0.85rem; line-height: 1.4">
+              O DIAGNÓSTICO TÉCNICO INCLUI ESCANEAMENTO ELETRÔNICO COMPLETO,
+              TESTES DE ATUADORES E SENSORES, AVALIAÇÃO DE GRANDEZAS ELÉTRICAS,
+              TESTES FUNCIONAIS E ANÁLISE TÉCNICA AVANÇADA PARA IDENTIFICAÇÃO DA
+              CAUSA RAIZ DO PROBLEMA.
+            </p>
+            <div class="options-row">
+              <label class="opt" id="label_diag_nao"
+                ><input
+                  type="radio"
+                  name="diagnostico"
+                  id="diag_nao"
+                  value="NÃO"
+                  checked
+                />
+                NÃO SOLICITADO</label
+              >
+              <label class="opt"
+                ><input type="radio" name="diagnostico" value="POPULAR" /> CARRO
+                POPULAR - R$ 250,00</label
+              >
+              <label class="opt"
+                ><input type="radio" name="diagnostico" value="PREMIUM" /> CARRO
+                PREMIUM - R$ 350,00</label
+              >
+            </div>
+          </div>
+        </section>
+
+        <section class="card">
+          <h2><i class="ph ph-clipboard-text"></i> Serviço e Histórico</h2>
+          <div class="form-grid">
+            <div class="form-control">
+              <label for="ultima_revisao_km">Última Revisão KM</label>
+              <input type="text" id="ultima_revisao_km" placeholder="KM" />
+            </div>
+            <div class="form-control">
+              <label for="ultima_revisao_data">Data da Última Revisão</label>
+              <input
+                type="text"
+                id="ultima_revisao_data"
+                placeholder="DD/MM/AAAA"
+              />
+            </div>
+            <div class="form-control full-width">
+              <label for="servico_solicitado"
+                >Serviço Solicitado pelo Cliente (Escreva como relatado)</label
+              >
+              <textarea
+                id="servico_solicitado"
+                placeholder="Digite aqui os detalhes do problema..."
+              ></textarea>
+            </div>
+          </div>
+        </section>
+
+        <section
+          class="card"
+          style="background: transparent; border: none; padding: 0"
+        >
+          <div class="actions">
+            <button class="btn btn-primary" type="button">
+              <i class="ph ph-floppy-disk"></i>
+              <span>Salvar Entrada</span>
+            </button>
+          </div>
+        </section>
+      </main>
+    </div>
+    <div id="modal-historico" class="modal-overlay hidden">
+      <div class="modal-form">
+        <div class="modal-header">
+          <h3
+            style="
+              margin: 0;
+              color: var(--text-primary);
+              display: flex;
+              gap: 10px;
+              align-items: center;
+            "
+          >
+            <i class="ph ph-users"></i> Histórico de Clientes
+          </h3>
+          <button
+            type="button"
+            class="btn-close-modal"
+            id="btn-fechar-historico"
+            title="Fechar Tela"
+          >
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+        <div class="search-wrapper">
+          <i class="ph ph-magnifying-glass"></i>
+          <input
+            type="text"
+            id="busca-historico"
+            placeholder="BUSCAR CLIENTE PELO NOME..."
+            autocomplete="off"
+          />
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Cliente</th>
+                <th>Qtd. Entradas</th>
+                <th>Última Visita</th>
+                <th style="text-align: right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="lista-clientes-tabela"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="paginacao-clientes">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="btn-prev-page"
+            style="padding: 8px 16px; font-size: 0.8rem"
+          >
+            <i class="ph ph-caret-left"></i> Anterior
+          </button>
+          <span class="page-info" id="info-pagina">Página 1 de 1</span>
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="btn-next-page"
+            style="padding: 8px 16px; font-size: 0.8rem"
+          >
+            Próxima <i class="ph ph-caret-right"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-cliente" class="modal-overlay hidden">
+      <div class="modal-form">
+        <div class="modal-header">
+          <h3
+            id="titulo-cliente"
+            style="
+              margin: 0;
+              color: var(--text-primary);
+              display: flex;
+              gap: 10px;
+              align-items: center;
+            "
+          >
+            <i class="ph ph-user"></i> Checklists do Cliente
+          </h3>
+          <button type="button" class="btn-close-modal" title="Fechar Tela">
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Placa</th>
+                <th>Veículo</th>
+                <th>Data/Hora</th>
+                <th style="text-align: right">Ações</th>
+              </tr>
+            </thead>
+            <tbody id="lista-checklists-cliente-tabela">
+              <tr>
+                <td
+                  colspan="5"
+                  style="
+                    text-align: center;
+                    color: var(--text-secondary);
+                    padding: 30px;
+                  "
+                >
+                  Selecione um cliente para ver o histórico.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-confirmacao" class="modal-overlay hidden">
+      <div
+        class="modal-form"
+        style="max-width: 400px; text-align: center; padding: 30px 20px"
+      >
+        <i
+          class="ph ph-warning-circle"
+          style="font-size: 4rem; color: var(--primary); margin-bottom: 15px"
+        ></i>
+        <h3
+          style="
+            margin: 0 0 10px 0;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+          "
+        >
+          Atenção!
+        </h3>
+        <p
+          style="
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+          "
+        >
+          Tem certeza que deseja limpar todo o formulário?<br />Todos os dados
+          não salvos serão perdidos.
+        </p>
+        <div style="display: flex; gap: 15px; justify-content: center">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="btn-cancelar-limpar"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="btn-confirmar-limpar"
+          >
+            Sim, limpar tudo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="js/main.js"></script>
+  </body>
+</html>
