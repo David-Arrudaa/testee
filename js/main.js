@@ -137,12 +137,29 @@ function fecharModalSucesso() {
 }
 
 // ==========================================
-// 5. LÓGICA DE PAGINAÇÃO (Histórico)
+// 5. BANCO DE CHECKLISTS E HISTÓRICO
 // ==========================================
-let listaClientesDb = [];
+let bancoChecklists = [];
 let paginaAtualClientes = 1;
 const clientesPorPagina = 20;
 
+// 1. Puxa os checklists salvos no navegador
+function carregarBancoChecklists() {
+  const dadosSalvos = localStorage.getItem("autocar_checklists");
+  if (dadosSalvos) {
+    bancoChecklists = JSON.parse(dadosSalvos);
+  }
+}
+
+// 2. Salva os checklists no navegador
+function salvarBancoChecklists() {
+  localStorage.setItem("autocar_checklists", JSON.stringify(bancoChecklists));
+}
+
+// Já carrega assim que o JS roda!
+carregarBancoChecklists();
+
+// 3. Desenha a tabela agrupando os checklists por Cliente
 function renderizarTabelaClientes() {
   const tbody = document.getElementById("lista-clientes-tabela");
   const termoBusca = document
@@ -152,45 +169,55 @@ function renderizarTabelaClientes() {
   const btnNext = document.getElementById("btn-next-page");
   const infoPagina = document.getElementById("info-pagina");
 
+  // Mágica: Agrupa todos os checklists pelo nome do cliente
+  const agrupados = {};
+  bancoChecklists.forEach((chk) => {
+    const nome = (chk.cliente_nome || "SEM NOME").toUpperCase();
+    if (!agrupados[nome]) {
+      agrupados[nome] = { nome: nome, qtd: 0, ultima: chk.data_entrada };
+    }
+    agrupados[nome].qtd++;
+    agrupados[nome].ultima = chk.data_entrada || agrupados[nome].ultima; // Mostra a data mais recente
+  });
+
+  // Transforma o grupo de volta em uma lista
+  let listaAgrupada = Object.values(agrupados);
+
   // Filtra pela busca
-  let clientesFiltrados = listaClientesDb.filter((cliente) =>
+  let clientesFiltrados = listaAgrupada.filter((cliente) =>
     cliente.nome.includes(termoBusca),
   );
 
-  // Calcula total de páginas
+  // Paginação
   const totalPaginas =
     Math.ceil(clientesFiltrados.length / clientesPorPagina) || 1;
   if (paginaAtualClientes > totalPaginas) paginaAtualClientes = 1;
 
-  // Pega apenas os 20 da página
   const inicio = (paginaAtualClientes - 1) * clientesPorPagina;
   const fim = inicio + clientesPorPagina;
   const clientesDaPagina = clientesFiltrados.slice(inicio, fim);
 
-  // Desenha na tela
   tbody.innerHTML = "";
 
   if (clientesDaPagina.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 30px;">Nenhum cliente encontrado.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 30px;">Nenhum checklist salvo.</td></tr>`;
     btnPrev.disabled = true;
     btnNext.disabled = true;
     infoPagina.innerText = `Página 0 de 0`;
   } else {
     clientesDaPagina.forEach((cliente) => {
       tbody.innerHTML += `
-                <tr>
-                    <td><strong>${cliente.nome}</strong></td>
-                    <td>${cliente.qtd}</td>
-                    <td>${cliente.ultima}</td>
-                    <td style="text-align: right">
-                        <button class="icon-btn" style="display:inline-flex; padding: 6px; border:none;" title="Ver Checklists">
-                            <i class="ph ph-list-bullets" style="font-size: 1.2rem; color: var(--primary);"></i>
-                        </button>
-                    </td>
-                </tr>
-            `;
+        <tr>
+          <td><strong>${cliente.nome}</strong></td>
+          <td>${cliente.qtd}</td>
+          <td>${cliente.ultima}</td>
+          <td style="text-align: right">
+            <button class="icon-btn" style="display:inline-flex; padding: 6px; border:none;" title="Ver Checklists">
+              <i class="ph ph-list-bullets" style="font-size: 1.2rem; color: var(--primary);"></i>
+            </button>
+          </td>
+        </tr>`;
     });
-
     infoPagina.innerText = `Página ${paginaAtualClientes} de ${totalPaginas}`;
     btnPrev.disabled = paginaAtualClientes === 1;
     btnNext.disabled = paginaAtualClientes === totalPaginas;
@@ -439,15 +466,6 @@ window.onload = function () {
     .getElementById("btn-fechar-historico")
     .addEventListener("click", fecharHistorico);
 
-  // Injetando 35 clientes de teste no histórico de entradas
-  for (let i = 1; i <= 35; i++) {
-    listaClientesDb.push({
-      nome: `CLIENTE TESTE ${i}`,
-      qtd: Math.floor(Math.random() * 5) + 1,
-      ultima: "10/10/2023",
-    });
-  }
-
   // Primeira renderização da tabela
   renderizarTabelaClientes();
 
@@ -658,28 +676,41 @@ window.onload = function () {
 };
 
 // ==========================================
-// 9. CAPTURA E ENVIO DO FORMULÁRIO
+// 9. CAPTURA E SALVAMENTO DO CHECKLIST
 // ==========================================
 const formChecklist = document.getElementById("form-checklist");
 
 formChecklist.addEventListener("submit", function (evento) {
-  // 1. O preventDefault IMPEDE a página de recarregar (comportamento padrão do HTML)
   evento.preventDefault();
 
-  // 2. O FormData é o "caminhão de mudança" do JS. Ele passa em todos os inputs
-  // que têm o atributo "name" e empacota os valores automaticamente.
-  const formData = new FormData(formChecklist);
+  try {
+    // 1. O FormData passa em todos os inputs e empacota os valores automaticamente
+    const formData = new FormData(formChecklist);
+    const dadosDoChecklist = Object.fromEntries(formData.entries());
 
-  // 3. Transformamos esse pacote em um Objeto simples do JavaScript
-  // Isso deixa os dados no formato perfeito para mandarmos pro Supabase depois!
-  const dadosDoChecklist = Object.fromEntries(formData.entries());
+    // 2. Salva no nosso "Banco de Checklists" da memória do navegador
+    bancoChecklists.push(dadosDoChecklist);
+    salvarBancoChecklists(); // 💾 Grava no LocalStorage!
 
-  // 4. Vamos imprimir no console para vermos se deu certo
-  console.log("✅ DADOS CAPTURADOS COM SUCESSO:");
-  console.log(dadosDoChecklist);
+    // 3. Atualiza a tabela do reloginho (Histórico) com a nova entrada
+    renderizarTabelaClientes();
 
-  // Um aviso na tela só para sabermos que a função rodou
-  alert("Dados capturados! Aperte F12 e olhe a aba Console.");
+    // 4. Mostra a nossa mensagem de sucesso bonitona
+    abrirModalSucesso("Checklist de Entrada salvo com sucesso!");
+
+    // 5. Limpa o formulário e os visuais (como o ponteiro de combustível)
+    // para o próximo carro!
+    formChecklist.reset();
+
+    // Volta o ponteiro de combustível pro VAZIO visualmente
+    if (typeof atualizarMarcadorCombustivel === "function") {
+      atualizarMarcadorCombustivel(0);
+      document.getElementById("fuel-slider").value = 0;
+    }
+  } catch (erro) {
+    console.error(erro);
+    alert("🚨 Erro ao salvar o checklist: " + erro.message);
+  }
 });
 
 // ==========================================
