@@ -351,9 +351,31 @@ function atualizarSugestoesClientes() {
 }
 
 function preencherVeiculoChecklist(veiculo) {
+  // Puxa as informações do banco para o Checklist Principal
   document.getElementById("veiculo_placa").value = veiculo.placa || "";
   document.getElementById("veiculo_marca").value = veiculo.marca || "";
-  document.getElementById("veiculo_versao").value = veiculo.modelo || "";
+
+  const campoVersao = document.getElementById("veiculo_versao");
+  if (campoVersao) campoVersao.value = veiculo.modelo || "";
+
+  const campoChassi = document.getElementById("veiculo_chassi");
+  if (campoChassi) campoChassi.value = veiculo.chassi || "";
+
+  const campoAno = document.getElementById("veiculo_ano_modelo");
+  if (campoAno) campoAno.value = veiculo.ano || "";
+
+  const campoCor = document.getElementById("veiculo_cor");
+  if (campoCor) campoCor.value = veiculo.cor || "";
+
+  // (Removido o preenchimento automático de KM daqui. O mecânico terá que digitar na hora!)
+
+  // Mágica do Combustível: Encontra o "radio button" correto e clica nele!
+  if (veiculo.combustivel) {
+    const radioCombustivel = document.querySelector(
+      `input[name="combustivel"][value="${veiculo.combustivel}"]`,
+    );
+    if (radioCombustivel) radioCombustivel.checked = true;
+  }
 }
 
 function abrirSelecaoVeiculos(veiculos) {
@@ -679,34 +701,51 @@ function fecharModalGestaoClientes() {
 
 function adicionarVeiculoLista() {
   const placaInput = document.getElementById("temp_veiculo_placa");
-  const marcaInput = document.getElementById("temp_veiculo_marca");
-  const modeloInput = document.getElementById("temp_veiculo_modelo");
 
-  // Pega os valores e já deixa tudo maiúsculo
+  // Puxa todos os valores novos (SEM O KM)
   const placa = placaInput.value.toUpperCase();
-  const marca = marcaInput.value.toUpperCase();
-  const modelo = modeloInput.value.toUpperCase();
+  const chassi = document
+    .getElementById("temp_veiculo_chassi")
+    .value.toUpperCase();
+  const marca = document
+    .getElementById("temp_veiculo_marca")
+    .value.toUpperCase();
+  const modelo = document
+    .getElementById("temp_veiculo_modelo")
+    .value.toUpperCase();
+  const ano = document.getElementById("temp_veiculo_ano").value;
+  const cor = document.getElementById("temp_veiculo_cor").value.toUpperCase();
+  const combustivel = document.getElementById("temp_veiculo_combustivel").value;
 
-  // Uma pequena validação: só adiciona se tiver pelo menos a Placa
   if (!placa) {
     alert("Digite pelo menos a placa para adicionar o veículo.");
     placaInput.focus();
     return;
   }
 
-  // Joga o veículo novo para dentro da nossa lista
-  veiculosTemporarios.push({ placa, marca, modelo });
+  // Joga TUDO pro "carrinho" de veículos (Tiramos o km daqui também)
+  veiculosTemporarios.push({
+    placa,
+    chassi,
+    marca,
+    modelo,
+    ano,
+    cor,
+    combustivel,
+  });
 
-  // Limpa as caixinhas para o usuário poder digitar o próximo carro
+  // Limpa tudo para o próximo carro
   placaInput.value = "";
-  marcaInput.value = "";
-  modeloInput.value = "";
-  placaInput.focus();
+  document.getElementById("temp_veiculo_chassi").value = "";
+  document.getElementById("temp_veiculo_marca").value = "";
+  document.getElementById("temp_veiculo_modelo").value = "";
+  document.getElementById("temp_veiculo_ano").value = "";
+  document.getElementById("temp_veiculo_cor").value = "";
+  document.getElementById("temp_veiculo_combustivel").value = "";
 
-  // Manda desenhar a tabela atualizada
+  placaInput.focus();
   renderizarVeiculosCadastro();
 }
-
 function removerVeiculoLista(index) {
   // Remove 1 item da lista na posição exata (index) que clicamos
   veiculosTemporarios.splice(index, 1);
