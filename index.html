@@ -701,13 +701,19 @@
             class="card"
             style="background: transparent; border: none; padding: 0"
           >
-            <div class="actions">
-              <button class="btn btn-primary" type="submit">
+            <div class="actions" style="display: flex; gap: 15px; width: 100%;">
+              <button class="btn btn-secondary" type="button" id="btn-imprimir" style="display: none; flex: 1; justify-content: center;">
+                <i class="ph ph-printer" style="font-size: 1.2rem;"></i>
+                <span>Imprimir / PDF</span>
+              </button>
+              
+              <button class="btn btn-primary" type="submit" id="btn-salvar-entrada" style="flex: 2; justify-content: center;">
                 <i class="ph ph-floppy-disk"></i>
                 <span>Salvar Entrada</span>
               </button>
             </div>
           </section>
+          
         </form>
       </main>
     </div>

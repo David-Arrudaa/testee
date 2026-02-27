@@ -98,6 +98,124 @@ function confirmarLimpeza() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+// IMPRESSÃO PADRÃO (NOVA JANELA / ORDEM DE SERVIÇO)
+// ==========================================
+document.getElementById("btn-imprimir").addEventListener("click", () => {
+  // 1. Pega todos os dados que estão aparecendo na tela agora
+  const form = document.getElementById("form-checklist");
+  const formData = new FormData(form);
+  const dados = Object.fromEntries(formData.entries());
+  const nivelCombustivel =
+    document.getElementById("nivel_combustivel").value || "VAZIO";
+
+  // 2. Monta o HTML do documento usando o seu CSS oficial
+  const htmlContent = `
+      <html>
+      <head>
+        <title>OS - ${dados.veiculo_placa}</title>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; margin: 0; padding: 25px; color: #000; line-height: 1.5; }
+          .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+          .brand { font-size: 26px; font-weight: bold; font-style: italic; }
+          .brand span { color: #EF4444; }
+          .box { border: 1px solid #000; margin-bottom: 18px; border-radius: 4px; overflow: hidden; }
+          .box-header { background: #eee; padding: 4px 8px; font-weight: bold; border-bottom: 1px solid #000; font-size: 12px; text-transform: uppercase; }
+          .box-content { padding: 6px; }
+          .row { display: flex; flex-wrap: wrap; }
+          .col { flex: 1; padding: 2px 4px; border-right: 1px solid #ddd; min-width: 80px; }
+          .col:last-child { border-right: none; }
+          .label { font-weight: bold; display: block; font-size: 10px; color: #444; margin-bottom: 1px; }
+          .value { display: block; font-size: 13px; text-transform: uppercase; font-weight: 600; min-height: 16px; }
+          .footer { margin-top: 30px; text-align: center; font-size: 11px; }
+          .auth-section { font-size: 11px; margin-bottom: 15px; }
+          .auth-row { margin-bottom: 6px; display: flex; align-items: center; }
+          .auth-check { font-family: monospace; font-weight: bold; margin-right: 12px; min-width: 100px; }
+          .auth-text { flex: 1; font-weight: bold; text-transform: uppercase; }
+          @media print {
+            body { margin: 0; padding: 15px; }
+            .box-header { background: #ddd !important; -webkit-print-color-adjust: exact; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div class="brand">AUTOCAR <span>BS</span></div>
+          <div style="font-weight: bold; font-size: 16px; margin-top: 5px;">ENTRADA DE VEÍCULO / CHECKLIST TÉCNICO</div>
+          <div style="font-size: 12px; margin-top: 5px;">Data: ${dados.data_entrada} às ${dados.horario_entrada} | Mecânico: ${dados.mecanico_responsavel}</div>
+        </div>
+
+        <div class="box">
+          <div class="box-header">Dados do Cliente</div>
+          <div class="box-content row">
+            <div class="col"><span class="label">NOME</span><span class="value">${dados.cliente_nome || "-"}</span></div>
+            <div class="col"><span class="label">CPF</span><span class="value">${dados.cliente_cpf || "-"}</span></div>
+            <div class="col"><span class="label">TELEFONE</span><span class="value">${dados.cliente_telefone || "-"}</span></div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="box-header">Dados do Veículo</div>
+          <div class="box-content row">
+            <div class="col"><span class="label">PLACA</span><span class="value">${dados.veiculo_placa || "-"}</span></div>
+            <div class="col"><span class="label">MARCA/VERSÃO</span><span class="value">${dados.veiculo_marca || "-"} ${dados.veiculo_versao || "-"}</span></div>
+            <div class="col"><span class="label">COR</span><span class="value">${dados.veiculo_cor || "-"}</span></div>
+            <div class="col"><span class="label">ANO</span><span class="value">${dados.veiculo_ano_modelo || "-"}</span></div>
+          </div>
+          <div class="box-content row" style="border-top: 1px solid #ddd;">
+            <div class="col"><span class="label">CHASSI</span><span class="value">${dados.veiculo_chassi || "-"}</span></div>
+            <div class="col"><span class="label">KM ATUAL</span><span class="value">${dados.veiculo_km || "-"}</span></div>
+            <div class="col"><span class="label">COMBUSTÍVEL</span><span class="value">${dados.combustivel || "-"}</span></div>
+            <div class="col"><span class="label">NÍVEL NO TANQUE</span><span class="value">${nivelCombustivel}</span></div>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="box-header">Serviço Solicitado (Relato do Cliente)</div>
+          <div class="box-content" style="min-height: 50px;">
+            <span class="value" style="font-size: 12px; text-transform: none;">${dados.servico_solicitado || "Nenhum detalhe adicional informado."}</span>
+          </div>
+        </div>
+
+        <div class="box">
+          <div class="box-header">Checklist / Avarias / Diagnóstico</div>
+          <div class="box-content row">
+            <div class="col"><span class="label">GUINCHO?</span><span class="value">${dados.guincho || "-"}</span></div>
+            <div class="col"><span class="label">LUZ DE PAINEL?</span><span class="value">${dados.luz_painel || "-"}</span></div>
+            <div class="col"><span class="label">CÂMBIO</span><span class="value">${dados.cambio || "-"}</span></div>
+            <div class="col"><span class="label">PORTAS</span><span class="value">${dados.portas || "-"}</span></div>
+          </div>
+        </div>
+
+        <div class="auth-section">
+          <div class="auth-row">
+            <div class="auth-check">[ ${dados.auth_imagem === "SIM" ? "X" : " "} ] SIM &nbsp;&nbsp; [ ${dados.auth_imagem === "NÃO" ? "X" : " "} ] NÃO</div>
+            <div class="auth-text">Autoriza o uso de imagem (restrição de placa para divulgação)?</div>
+          </div>
+          <div class="auth-row">
+            <div class="auth-check">[ ${dados.diagnostico !== "NÃO" ? "X" : " "} ] SIM &nbsp;&nbsp; [ ${dados.diagnostico === "NÃO" ? "X" : " "} ] NÃO</div>
+            <div class="auth-text">Diagnóstico Técnico Solicitado: ${dados.diagnostico || "-"}</div>
+          </div>
+        </div>
+
+        <div class="footer" style="margin-top: 50px; display: flex; justify-content: space-around;">
+          <div style="width: 40%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Cliente</div>
+          <div style="width: 40%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Responsável Técnico</div>
+        </div>
+      </body>
+      </html>
+    `;
+
+  // 3. Abre a janela, escreve o documento e manda imprimir!
+  const win = window.open("", "", "height=800,width=900");
+  win.document.write(htmlContent);
+  win.document.close();
+
+  setTimeout(() => {
+    win.focus();
+    win.print();
+  }, 500);
+});
+
 function abrirHistorico() {
   document.getElementById("modal-historico").classList.remove("hidden");
 }
@@ -228,42 +346,93 @@ function renderizarTabelaClientes() {
 // FUNÇÕES DO MODAL DE DETALHES DO CLIENTE
 // ==========================================
 function abrirDetalhesCliente(nomeCliente) {
-  // 1. Filtra no banco apenas os checklists desse cliente específico
-  const checklistsDoCliente = bancoChecklists.filter(
-    (chk) => (chk.cliente_nome || "SEM NOME").toUpperCase() === nomeCliente,
-  );
-
   const tbody = document.getElementById("lista-checklists-cliente-tabela");
   tbody.innerHTML = "";
-
-  // 2. Muda o título do modal dinamicamente
   document.getElementById("titulo-cliente").innerHTML =
     `<i class="ph ph-user"></i> Histórico: ${nomeCliente}`;
 
-  // 3. Desenha as linhas de cada carro/entrada que ele fez
-  checklistsDoCliente.forEach((chk) => {
-    const placa = chk.veiculo_placa || "-";
-    const veiculo = `${chk.veiculo_marca || ""} ${chk.veiculo_versao || ""}`;
-    const data = chk.data_entrada || "-";
+  // Procura no banco os checklists do cliente e desenha a tabela
+  bancoChecklists.forEach((chk, index) => {
+    if ((chk.cliente_nome || "SEM NOME").toUpperCase() === nomeCliente) {
+      const placa = chk.veiculo_placa || "-";
+      const veiculo = `${chk.veiculo_marca || ""} ${chk.veiculo_versao || ""}`;
+      const data = chk.data_entrada || "-";
 
-    tbody.innerHTML += `
-      <tr>
-        <td><span class="badge" style="background: var(--primary); color: white;">SALVO</span></td>
-        <td><strong>${placa}</strong></td>
-        <td>${veiculo}</td>
-        <td>${data}</td>
-        <td style="text-align: right">
-          <button type="button" class="icon-btn" title="Ver Detalhes (Em breve)">
-            <i class="ph ph-eye" style="font-size: 1.2rem; color: var(--text-secondary);"></i>
-          </button>
-        </td>
-      </tr>
-    `;
+      tbody.innerHTML += `
+        <tr>
+          <td><span class="badge" style="background: var(--primary); color: white;">SALVO</span></td>
+          <td><strong>${placa}</strong></td>
+          <td>${veiculo}</td>
+          <td>${data}</td>
+          <td style="text-align: right">
+            <button type="button" class="icon-btn" title="Visualizar Checklist" onclick="carregarChecklistNaTela(${index})">
+              <i class="ph ph-eye" style="font-size: 1.2rem; color: var(--primary);"></i>
+            </button>
+          </td>
+        </tr>
+      `;
+    }
   });
 
-  // 4. Esconde a tabela geral e mostra a individual
   document.getElementById("modal-historico").classList.add("hidden");
   document.getElementById("modal-cliente").classList.remove("hidden");
+}
+
+function fecharDetalhesCliente() {
+  document.getElementById("modal-cliente").classList.add("hidden");
+  document.getElementById("modal-historico").classList.remove("hidden");
+}
+
+// A MÁGICA DE PREENCHER TUDO DE NOVO
+function carregarChecklistNaTela(index) {
+  const chk = bancoChecklists[index];
+
+  // 1. Fecha os modais de histórico
+  fecharDetalhesCliente();
+  fecharHistorico();
+
+  // 2. Preenche todos os campos de texto automaticamente
+  Object.keys(chk).forEach((chave) => {
+    const campo = document.getElementById(chave);
+    if (
+      campo &&
+      campo.type !== "radio" &&
+      campo.type !== "checkbox" &&
+      campo.type !== "file"
+    ) {
+      campo.value = chk[chave];
+    }
+
+    // 3. Marca as "bolinhas" (Radios) corretas (Combustível, Guincho, Portas, etc)
+    const radios = document.querySelectorAll(`input[name="${chave}"]`);
+    radios.forEach((radio) => {
+      if (radio.value === chk[chave]) {
+        radio.checked = true;
+      }
+    });
+  });
+
+  // 4. Arruma o ponteiro visual de Combustível
+  const nivelTexto = chk.nivel_combustivel;
+  const indiceCombustivel = MAPA_COMBUSTIVEL.findIndex(
+    (item) => item.texto === nivelTexto,
+  );
+  if (indiceCombustivel !== -1) {
+    document.getElementById("fuel-slider").value = indiceCombustivel;
+    atualizarMarcadorCombustivel(indiceCombustivel);
+  }
+
+  // 5. Muda o Visual do Topo (Mostra que estamos visualizando algo antigo)
+  document.getElementById("status-edicao").innerText = "VISUALIZANDO HISTÓRICO";
+  document.getElementById("status-edicao").style.background = "var(--primary)";
+  document.getElementById("btn-cancelar-edicao").style.display = "flex";
+
+  // Troca o botão de Salvar pelo de Imprimir!
+  document.getElementById("btn-salvar-entrada").style.display = "none";
+  document.getElementById("btn-imprimir").style.display = "flex";
+
+  // Rola a tela pro topo para o mecânico ver
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function fecharDetalhesCliente() {
@@ -720,6 +889,46 @@ window.onload = function () {
   document
     .getElementById("btn-confirmar-excluir")
     .addEventListener("click", confirmarExclusao);
+
+  document
+    .getElementById("btn-cancelar-edicao")
+    .addEventListener("click", confirmarLimpeza);
+
+  // ==========================================
+  // BOTÃO DE CANCELAR EDIÇÃO / VISUALIZAÇÃO
+  // ==========================================
+  const btnCancelarEdicao = document.getElementById("btn-cancelar-edicao");
+
+  if (btnCancelarEdicao) {
+    btnCancelarEdicao.addEventListener("click", function () {
+      // 1. Limpa todos os campos do formulário de uma vez
+      document.getElementById("form-checklist").reset();
+
+      // 2. Zera o ponteiro de combustível
+      if (typeof atualizarMarcadorCombustivel === "function") {
+        document.getElementById("fuel-slider").value = 0;
+        atualizarMarcadorCombustivel(0);
+      }
+
+      // 3. Devolve a aparência original da etiqueta "NOVO"
+      const badgeStatus = document.getElementById("status-edicao");
+      badgeStatus.innerText = "NOVO";
+      badgeStatus.style.background = ""; // Tira o vermelho/azul
+      badgeStatus.style.color = ""; // Tira a cor de texto forçada
+
+      // 4. Esconde o "Cancelar", esconde a "Impressora" e volta o "Salvar"
+      this.style.display = "none";
+      document.getElementById("btn-imprimir").style.display = "none";
+      document.getElementById("btn-salvar-entrada").style.display = "flex";
+
+      // 5. Preenche a data e hora atual novamente para o próximo carro
+      preencherDataHoraAtual();
+      verificarLuzPainel();
+
+      // 6. Rola a tela para o topo suavemente
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
 };
 
 // ==========================================
