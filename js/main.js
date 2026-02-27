@@ -169,7 +169,6 @@ function renderizarTabelaClientes() {
   const btnNext = document.getElementById("btn-next-page");
   const infoPagina = document.getElementById("info-pagina");
 
-  // Mágica: Agrupa todos os checklists pelo nome do cliente
   const agrupados = {};
   bancoChecklists.forEach((chk) => {
     const nome = (chk.cliente_nome || "SEM NOME").toUpperCase();
@@ -177,18 +176,14 @@ function renderizarTabelaClientes() {
       agrupados[nome] = { nome: nome, qtd: 0, ultima: chk.data_entrada };
     }
     agrupados[nome].qtd++;
-    agrupados[nome].ultima = chk.data_entrada || agrupados[nome].ultima; // Mostra a data mais recente
+    agrupados[nome].ultima = chk.data_entrada || agrupados[nome].ultima;
   });
 
-  // Transforma o grupo de volta em uma lista
   let listaAgrupada = Object.values(agrupados);
-
-  // Filtra pela busca
   let clientesFiltrados = listaAgrupada.filter((cliente) =>
     cliente.nome.includes(termoBusca),
   );
 
-  // Paginação
   const totalPaginas =
     Math.ceil(clientesFiltrados.length / clientesPorPagina) || 1;
   if (paginaAtualClientes > totalPaginas) paginaAtualClientes = 1;
@@ -212,7 +207,7 @@ function renderizarTabelaClientes() {
           <td>${cliente.qtd}</td>
           <td>${cliente.ultima}</td>
           <td style="text-align: right">
-            <button class="icon-btn" style="display:inline-flex; padding: 6px; border:none;" title="Ver Checklists">
+            <button class="icon-btn" style="display:inline-flex; padding: 6px; border:none;" title="Ver Checklists" onclick="abrirDetalhesCliente('${cliente.nome}')">
               <i class="ph ph-list-bullets" style="font-size: 1.2rem; color: var(--primary);"></i>
             </button>
           </td>
@@ -227,6 +222,54 @@ function renderizarTabelaClientes() {
   btnPrev.style.cursor = btnPrev.disabled ? "not-allowed" : "pointer";
   btnNext.style.opacity = btnNext.disabled ? "0.3" : "1";
   btnNext.style.cursor = btnNext.disabled ? "not-allowed" : "pointer";
+}
+
+// ==========================================
+// FUNÇÕES DO MODAL DE DETALHES DO CLIENTE
+// ==========================================
+function abrirDetalhesCliente(nomeCliente) {
+  // 1. Filtra no banco apenas os checklists desse cliente específico
+  const checklistsDoCliente = bancoChecklists.filter(
+    (chk) => (chk.cliente_nome || "SEM NOME").toUpperCase() === nomeCliente,
+  );
+
+  const tbody = document.getElementById("lista-checklists-cliente-tabela");
+  tbody.innerHTML = "";
+
+  // 2. Muda o título do modal dinamicamente
+  document.getElementById("titulo-cliente").innerHTML =
+    `<i class="ph ph-user"></i> Histórico: ${nomeCliente}`;
+
+  // 3. Desenha as linhas de cada carro/entrada que ele fez
+  checklistsDoCliente.forEach((chk) => {
+    const placa = chk.veiculo_placa || "-";
+    const veiculo = `${chk.veiculo_marca || ""} ${chk.veiculo_versao || ""}`;
+    const data = chk.data_entrada || "-";
+
+    tbody.innerHTML += `
+      <tr>
+        <td><span class="badge" style="background: var(--primary); color: white;">SALVO</span></td>
+        <td><strong>${placa}</strong></td>
+        <td>${veiculo}</td>
+        <td>${data}</td>
+        <td style="text-align: right">
+          <button type="button" class="icon-btn" title="Ver Detalhes (Em breve)">
+            <i class="ph ph-eye" style="font-size: 1.2rem; color: var(--text-secondary);"></i>
+          </button>
+        </td>
+      </tr>
+    `;
+  });
+
+  // 4. Esconde a tabela geral e mostra a individual
+  document.getElementById("modal-historico").classList.add("hidden");
+  document.getElementById("modal-cliente").classList.remove("hidden");
+}
+
+function fecharDetalhesCliente() {
+  // Faz o inverso: fecha a individual e volta pra geral
+  document.getElementById("modal-cliente").classList.add("hidden");
+  document.getElementById("modal-historico").classList.remove("hidden");
 }
 
 function mudarPagina(direcao) {
@@ -465,6 +508,10 @@ window.onload = function () {
   document
     .getElementById("btn-fechar-historico")
     .addEventListener("click", fecharHistorico);
+
+  document
+    .getElementById("btn-fechar-modal-cliente")
+    .addEventListener("click", fecharDetalhesCliente);
 
   // Primeira renderização da tabela
   renderizarTabelaClientes();
