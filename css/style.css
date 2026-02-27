@@ -11,6 +11,16 @@
   --primary: #f10707; /* Vermelho padrão AUTOCAR */
 }
 
+body.light-theme {
+  --bg-body: #f0f2f5; /* Fundo da página cinza bem claro */
+  --bg-card: #ffffff; /* Fundo dos cartões totalmente branco */
+  --bg-input: #f3f4f6; /* Fundo das caixinhas de digitar um pouco mais cinza */
+  --border: #d1d5db; /* Borda mais suave e clara */
+  --text-primary: #1f2937; /* Texto principal quase preto para leitura fácil */
+  --text-secondary: #6b7280; /* Texto secundário (ícones/labels) cinza escuro */
+  /* A variável --primary a gente não mexe, para o botão continuar vermelho! */
+}
+
 /* =========================================
    2. RESET BÁSICO (Limpando o navegador)
    ========================================= */
@@ -38,11 +48,16 @@ body {
   gap: 20px;
 }
 
-/* ADICIONE ESTE BLOCO AQUI 👇 */
 main {
   display: flex;
   flex-direction: column;
   gap: 20px; /* Esse é o respiro entre os cartões! */
+}
+
+#form-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 20px; /* Devolve o respiro entre as seções dentro do formulário */
 }
 
 /* =========================================
