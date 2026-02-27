@@ -98,26 +98,55 @@ function confirmarLimpeza() {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
+// ==========================================
 // IMPRESSÃO PADRÃO (NOVA JANELA / ORDEM DE SERVIÇO)
 // ==========================================
 document.getElementById("btn-imprimir").addEventListener("click", () => {
-  // 1. Pega todos os dados que estão aparecendo na tela agora
+  // 1. Coleta os dados do formulário
   const form = document.getElementById("form-checklist");
   const formData = new FormData(form);
   const dados = Object.fromEntries(formData.entries());
   const nivelCombustivel =
     document.getElementById("nivel_combustivel").value || "VAZIO";
 
-  // 2. Monta o HTML do documento usando o seu CSS oficial
+  // 2. Tradutor do Diagnóstico (R$)
+  let valorDiagnostico = "NÃO SOLICITADO";
+  if (dados.diagnostico === "POPULAR") valorDiagnostico = "R$ 250,00";
+  if (dados.diagnostico === "PREMIUM") valorDiagnostico = "R$ 350,00";
+
+  // 3. MÁGICA DAS ASSINATURAS: Verifica se veio de guincho para adicionar a 3ª linha
+  let assinaturasHtml = "";
+  if (dados.guincho === "SIM") {
+    assinaturasHtml = `
+      <div style="width: 30%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Cliente</div>
+      <div style="width: 30%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Responsável</div>
+      <div style="width: 30%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Guincho</div>
+    `;
+  } else {
+    assinaturasHtml = `
+      <div style="width: 40%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Cliente</div>
+      <div style="width: 40%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Responsável Técnico</div>
+    `;
+  }
+
+  // 4. MÁGICA DA IMAGEM: Força o caminho absoluto para a logo não sumir
+  const logoUrl = new URL(
+    "img/logo-preta.png",
+    window.location.origin + window.location.pathname,
+  ).href;
+
+  // 5. Monta o HTML do documento
   const htmlContent = `
       <html>
       <head>
-        <title>OS - ${dados.veiculo_placa}</title>
+        <title>Checklist - ${dados.veiculo_placa}</title>
         <style>
-          body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; margin: 0; padding: 25px; color: #000; line-height: 1.5; }
-          .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-          .brand { font-size: 26px; font-weight: bold; font-style: italic; }
-          .brand span { color: #EF4444; }
+          @page { margin: 0; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; margin: 15mm; color: #000; line-height: 1.5; }
+          
+          .header { display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 15px; }
+          .header-title { font-size: 24px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+          
           .box { border: 1px solid #000; margin-bottom: 18px; border-radius: 4px; overflow: hidden; }
           .box-header { background: #eee; padding: 4px 8px; font-weight: bold; border-bottom: 1px solid #000; font-size: 12px; text-transform: uppercase; }
           .box-content { padding: 6px; }
@@ -126,22 +155,29 @@ document.getElementById("btn-imprimir").addEventListener("click", () => {
           .col:last-child { border-right: none; }
           .label { font-weight: bold; display: block; font-size: 10px; color: #444; margin-bottom: 1px; }
           .value { display: block; font-size: 13px; text-transform: uppercase; font-weight: 600; min-height: 16px; }
-          .footer { margin-top: 30px; text-align: center; font-size: 11px; }
+          .footer { margin-top: 50px; text-align: center; font-size: 11px; }
           .auth-section { font-size: 11px; margin-bottom: 15px; }
           .auth-row { margin-bottom: 6px; display: flex; align-items: center; }
           .auth-check { font-family: monospace; font-weight: bold; margin-right: 12px; min-width: 100px; }
           .auth-text { flex: 1; font-weight: bold; text-transform: uppercase; }
+          
           @media print {
-            body { margin: 0; padding: 15px; }
-            .box-header { background: #ddd !important; -webkit-print-color-adjust: exact; }
+            .box-header { background: #ddd !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
           }
         </style>
       </head>
       <body>
         <div class="header">
-          <div class="brand">AUTOCAR <span>BS</span></div>
-          <div style="font-weight: bold; font-size: 16px; margin-top: 5px;">ENTRADA DE VEÍCULO / CHECKLIST TÉCNICO</div>
-          <div style="font-size: 12px; margin-top: 5px;">Data: ${dados.data_entrada} às ${dados.horario_entrada} | Mecânico: ${dados.mecanico_responsavel}</div>
+          <img src="${logoUrl}" style="height: 65px;" alt="Logo Autocar" />
+          <div class="header-title">CHECKLIST DE ENTRADA</div>
+        </div>
+
+        <div class="box">
+          <div class="box-header">Detalhes da Entrada</div>
+          <div class="box-content row">
+            <div class="col" style="max-width: 250px;"><span class="label">DATA / HORA</span><span class="value">${dados.data_entrada} às ${dados.horario_entrada}</span></div>
+            <div class="col"><span class="label">MECÂNICO RESPONSÁVEL</span><span class="value">${dados.mecanico_responsavel || "-"}</span></div>
+          </div>
         </div>
 
         <div class="box">
@@ -167,6 +203,11 @@ document.getElementById("btn-imprimir").addEventListener("click", () => {
             <div class="col"><span class="label">COMBUSTÍVEL</span><span class="value">${dados.combustivel || "-"}</span></div>
             <div class="col"><span class="label">NÍVEL NO TANQUE</span><span class="value">${nivelCombustivel}</span></div>
           </div>
+          <div class="box-content row" style="border-top: 1px solid #ddd;">
+            <div class="col"><span class="label">CÂMBIO</span><span class="value">${dados.cambio || "-"}</span></div>
+            <div class="col"><span class="label">PORTAS</span><span class="value">${dados.portas || "-"}</span></div>
+            <div class="col"></div> <div class="col"></div>
+          </div>
         </div>
 
         <div class="box">
@@ -181,31 +222,28 @@ document.getElementById("btn-imprimir").addEventListener("click", () => {
           <div class="box-content row">
             <div class="col"><span class="label">GUINCHO?</span><span class="value">${dados.guincho || "-"}</span></div>
             <div class="col"><span class="label">LUZ DE PAINEL?</span><span class="value">${dados.luz_painel || "-"}</span></div>
-            <div class="col"><span class="label">CÂMBIO</span><span class="value">${dados.cambio || "-"}</span></div>
-            <div class="col"><span class="label">PORTAS</span><span class="value">${dados.portas || "-"}</span></div>
+            <div class="col"><span class="label">DOC. NO VEÍCULO?</span><span class="value">${dados.documento_no_veiculo || "-"}</span></div>
           </div>
         </div>
 
         <div class="auth-section">
           <div class="auth-row">
-            <div class="auth-check">[ ${dados.auth_imagem === "SIM" ? "X" : " "} ] SIM &nbsp;&nbsp; [ ${dados.auth_imagem === "NÃO" ? "X" : " "} ] NÃO</div>
+            <div class="auth-check">[ ${dados.auth_imagem === "SIM" ? "X" : "&nbsp;"} ] SIM &nbsp;&nbsp; [ ${dados.auth_imagem === "NÃO" ? "X" : "&nbsp;"} ] NÃO</div>
             <div class="auth-text">Autoriza o uso de imagem (restrição de placa para divulgação)?</div>
           </div>
           <div class="auth-row">
-            <div class="auth-check">[ ${dados.diagnostico !== "NÃO" ? "X" : " "} ] SIM &nbsp;&nbsp; [ ${dados.diagnostico === "NÃO" ? "X" : " "} ] NÃO</div>
-            <div class="auth-text">Diagnóstico Técnico Solicitado: ${dados.diagnostico || "-"}</div>
+            <div class="auth-check">[ ${dados.diagnostico !== "NÃO" ? "X" : "&nbsp;"} ] SIM &nbsp;&nbsp; [ ${dados.diagnostico === "NÃO" ? "X" : "&nbsp;"} ] NÃO</div>
+            <div class="auth-text">Diagnóstico Técnico Solicitado: ${valorDiagnostico}</div>
           </div>
         </div>
 
         <div class="footer" style="margin-top: 50px; display: flex; justify-content: space-around;">
-          <div style="width: 40%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Cliente</div>
-          <div style="width: 40%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Responsável Técnico</div>
+          ${assinaturasHtml}
         </div>
       </body>
       </html>
     `;
 
-  // 3. Abre a janela, escreve o documento e manda imprimir!
   const win = window.open("", "", "height=800,width=900");
   win.document.write(htmlContent);
   win.document.close();
@@ -213,7 +251,7 @@ document.getElementById("btn-imprimir").addEventListener("click", () => {
   setTimeout(() => {
     win.focus();
     win.print();
-  }, 500);
+  }, 800);
 });
 
 function abrirHistorico() {
