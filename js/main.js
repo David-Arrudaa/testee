@@ -1120,11 +1120,11 @@ function carregarBancoClientes() {
     bancoClientesFalso = [
       {
         nome: "RAFAELA (EXEMPLO)",
-        cpf: "422.050.358-78",
-        telefone: "(15) 99700-9302",
+        cpf: "420.000.000-00",
+        telefone: "(15) 99700-0000",
         cep: "18274-882",
         endereco: "Silvio Almeida Sinisgali",
-        numero: "153",
+        numero: "353",
         bairro: "PACAEMBU",
         cidade: "Tatuí",
         veiculos: [{ placa: "ABC-1234", marca: "VW", modelo: "GOL" }],

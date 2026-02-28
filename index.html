@@ -20,39 +20,45 @@
             style="height: 45px; width: auto"
           />
         </div>
+        <nav>
+          <div class="header-actions">
+            <button
+              type="button"
+              class="icon-btn"
+              id="btn-gestao-clientes"
+              title="Gestão de Clientes"
+            >
+              <i class="ph ph-users"></i>
+            </button>
 
-        <div class="header-actions">
-          <button type="button" class="icon-btn" id="btn-gestao-clientes" title="Gestão de Clientes">
-            <i class="ph ph-users"></i>
-          </a>
+            <button
+              type="button"
+              class="icon-btn"
+              id="btn-tema"
+              title="Mudar Tema"
+            >
+              <i class="ph ph-sun" id="icone-tema"></i>
+            </button>
 
-          <button
-            type="button"
-            class="icon-btn"
-            id="btn-tema"
-            title="Mudar Tema"
-          >
-            <i class="ph ph-sun" id="icone-tema"></i>
-          </button>
+            <button
+              type="button"
+              class="icon-btn"
+              id="btn-historico"
+              title="Histórico de Checklists"
+            >
+              <i class="ph ph-clock-counter-clockwise"></i>
+            </button>
 
-          <button
-            type="button"
-            class="icon-btn"
-            id="btn-historico"
-            title="Histórico de Checklists"
-          >
-            <i class="ph ph-clock-counter-clockwise"></i>
-          </button>
-
-          <button
-            type="button"
-            class="icon-btn btn-danger"
-            id="btn-limpar"
-            title="Limpar Formulário"
-          >
-            <i class="ph ph-broom"></i>
-          </button>
-        </div>
+            <button
+              type="button"
+              class="icon-btn btn-danger"
+              id="btn-limpar"
+              title="Limpar Formulário"
+            >
+              <i class="ph ph-broom"></i>
+            </button>
+          </div>
+        </nav>
       </header>
 
       <main>
@@ -67,7 +73,6 @@
                 width: 100%;
               "
             >
- 
               <div
                 style="
                   display: flex;
@@ -474,134 +479,65 @@
           </section>
 
           <section class="card">
-            <h2><i class="ph ph-camera"></i> Fotos do Veículo</h2>
-            <h3
+            <h2><i class="ph ph-camera"></i> Registro Fotográfico</h2>
+
+            <p
               style="
                 font-size: 0.85rem;
                 color: var(--text-secondary);
-                margin-bottom: 10px;
-                text-transform: uppercase;
+                margin-bottom: 15px;
+                line-height: 1.4;
               "
             >
-              Fotos Obrigatórias (5 Ângulos)
-            </h3>
-            <div class="photo-grid">
-              <input
-                type="file"
-                id="foto_frente"
-                name="foto_frente"
-                accept="image/*"
-                capture="environment"
-                class="hidden"
-              />
-              <label for="foto_frente" class="photo-slot"
-                ><i class="ph ph-car-profile" style="transform: scaleX(-1)"></i
-                ><span>Frente</span></label
-              >
+              Tire as 5 fotos obrigatórias (Frente, Traseira, Laterais e Painel)
+              e eventuais avarias usando a
+              <strong>câmera normal do seu celular</strong>. Elas ficarão salvas
+              na Galeria.
+            </p>
 
-              <input
-                type="file"
-                id="foto_traseira"
-                name="foto_traseira"
-                accept="image/*"
-                capture="environment"
-                class="hidden"
-              />
-              <label for="foto_traseira" class="photo-slot"
-                ><i class="ph ph-car-profile"></i><span>Traseira</span></label
-              >
-
-              <input
-                type="file"
-                id="foto_lat_esq"
-                name="foto_lat_esq"
-                accept="image/*"
-                capture="environment"
-                class="hidden"
-              />
-              <label for="foto_lat_esq" class="photo-slot"
-                ><i class="ph ph-arrow-left"></i
-                ><span>Lat. Motorista</span></label
-              >
-
-              <input
-                type="file"
-                id="foto_lat_dir"
-                name="foto_lat_dir"
-                accept="image/*"
-                capture="environment"
-                class="hidden"
-              />
-              <label for="foto_lat_dir" class="photo-slot"
-                ><i class="ph ph-arrow-right"></i
-                ><span>Lat. Passageiro</span></label
-              >
-
-              <input
-                type="file"
-                id="foto_painel"
-                name="foto_painel"
-                accept="image/*"
-                capture="environment"
-                class="hidden"
-              />
-              <label for="foto_painel" class="photo-slot"
-                ><i class="ph ph-gauge"></i><span>Painel / KM</span></label
-              >
-            </div>
-            <hr
-              style="
-                border: 0;
-                border-top: 1px solid var(--border);
-                margin: 20px 0;
-              "
-            />
-            <h3
-              style="
-                font-size: 0.85rem;
-                color: var(--text-secondary);
-                margin-bottom: 10px;
-                text-transform: uppercase;
-              "
-            >
-              Avarias / Detalhes (Opcionais)
-            </h3>
-            <div style="display: flex; flex-direction: column; gap: 15px">
-              <input
-                type="file"
-                id="upload_fotos_extras"
-                name="upload_fotos_extras"
-                accept="image/*"
-                multiple
-                capture="environment"
-                class="hidden"
-              />
-              <label
-                for="upload_fotos_extras"
-                class="btn btn-secondary"
-                style="width: fit-content"
-              >
-                <i class="ph ph-camera-plus" style="font-size: 1.2rem"></i>
-                Adicionar Avarias
-              </label>
+            <div class="form-control" style="margin-bottom: 0">
               <div
-                id="preview_fotos_extras"
                 style="
-                  display: flex;
-                  gap: 10px;
-                  flex-wrap: wrap;
-                  padding: 10px;
-                  border: 1px dashed var(--border);
+                  background: var(--bg-body);
+                  padding: 15px;
                   border-radius: 6px;
-                  min-height: 80px;
-                  align-items: center;
-                  justify-content: center;
+                  border: 1px dashed var(--primary);
                 "
               >
-                <span style="font-size: 0.85rem; color: var(--text-secondary)"
-                  >Nenhuma foto extra.</span
+                <label
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 10px;
+                    cursor: pointer;
+                    font-weight: bold;
+                    color: var(--text-primary);
+                    font-size: 0.95rem;
+                  "
                 >
+                  <input
+                    type="checkbox"
+                    id="fotos_galeria_ok"
+                    name="fotos_galeria_ok"
+                    value="SIM"
+                    required
+                    style="width: 22px; height: 22px; cursor: pointer"
+                  />
+                  SIM, confirmo que as fotos foram tiradas.
+                </label>
               </div>
+              <small
+                style="
+                  display: block;
+                  margin-top: 8px;
+                  color: #ef4444;
+                  font-size: 0.8rem;
+                  font-weight: 600;
+                "
+              >
+                * Obrigatório: O sistema não salvará a entrada sem esta
+                confirmação.
+              </small>
             </div>
           </section>
 
@@ -701,19 +637,28 @@
             class="card"
             style="background: transparent; border: none; padding: 0"
           >
-            <div class="actions" style="display: flex; gap: 15px; width: 100%;">
-              <button class="btn btn-secondary" type="button" id="btn-imprimir" style="display: none; flex: 1; justify-content: center;">
-                <i class="ph ph-printer" style="font-size: 1.2rem;"></i>
+            <div class="actions" style="display: flex; gap: 15px; width: 100%">
+              <button
+                class="btn btn-secondary"
+                type="button"
+                id="btn-imprimir"
+                style="display: none; flex: 1; justify-content: center"
+              >
+                <i class="ph ph-printer" style="font-size: 1.2rem"></i>
                 <span>Imprimir / PDF</span>
               </button>
-              
-              <button class="btn btn-primary" type="submit" id="btn-salvar-entrada" style="flex: 2; justify-content: center;">
+
+              <button
+                class="btn btn-primary"
+                type="submit"
+                id="btn-salvar-entrada"
+                style="flex: 2; justify-content: center"
+              >
                 <i class="ph ph-floppy-disk"></i>
                 <span>Salvar Entrada</span>
               </button>
             </div>
           </section>
-          
         </form>
       </main>
     </div>
@@ -800,7 +745,12 @@
           >
             <i class="ph ph-user"></i> Checklists do Cliente
           </h3>
-          <button type="button" class="btn-close-modal" id="btn-fechar-modal-cliente" title="Voltar">
+          <button
+            type="button"
+            class="btn-close-modal"
+            id="btn-fechar-modal-cliente"
+            title="Voltar"
+          >
             <i class="ph ph-x"></i>
           </button>
         </div>
@@ -882,24 +832,54 @@
       </div>
     </div>
 
-   <div id="modal-gestao-clientes" class="modal-overlay hidden">
-      <div class="modal-form" style="max-width: 900px;">
+    <div id="modal-gestao-clientes" class="modal-overlay hidden">
+      <div class="modal-form" style="max-width: 900px">
         <div class="modal-header">
-          <h3 style="margin: 0; color: var(--text-primary); display: flex; gap: 10px; align-items: center;">
+          <h3
+            style="
+              margin: 0;
+              color: var(--text-primary);
+              display: flex;
+              gap: 10px;
+              align-items: center;
+            "
+          >
             <i class="ph ph-users"></i> Gestão de Clientes
           </h3>
-          <button type="button" class="btn-close-modal" id="btn-fechar-gestao-clientes" title="Fechar Tela">
+          <button
+            type="button"
+            class="btn-close-modal"
+            id="btn-fechar-gestao-clientes"
+            title="Fechar Tela"
+          >
             <i class="ph ph-x"></i>
           </button>
         </div>
 
         <div id="view-lista-clientes">
-          <div style="display: flex; justify-content: space-between; margin-bottom: 20px; gap: 15px;">
-            <div class="search-wrapper" style="margin-bottom: 0; width: 100%;">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 20px;
+              gap: 15px;
+            "
+          >
+            <div class="search-wrapper" style="margin-bottom: 0; width: 100%">
               <i class="ph ph-magnifying-glass"></i>
-              <input type="text" id="busca-lista-clientes" placeholder="BUSCAR CLIENTE PELO NOME..." autocomplete="off" />
+              <input
+                type="text"
+                id="busca-lista-clientes"
+                placeholder="BUSCAR CLIENTE PELO NOME..."
+                autocomplete="off"
+              />
             </div>
-            <button type="button" class="btn btn-primary" id="btn-novo-cliente" style="white-space: nowrap;">
+            <button
+              type="button"
+              class="btn btn-primary"
+              id="btn-novo-cliente"
+              style="white-space: nowrap"
+            >
               <i class="ph ph-user-plus"></i> Novo Cliente
             </button>
           </div>
@@ -913,97 +893,224 @@
                   <th style="text-align: right">Ações</th>
                 </tr>
               </thead>
-              <tbody id="tbody-lista-clientes">
-                </tbody>
+              <tbody id="tbody-lista-clientes"></tbody>
             </table>
           </div>
         </div>
 
         <form id="form-cadastro-cliente" class="hidden">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <h3 style="font-size: 0.9rem; color: var(--primary); text-transform: uppercase; margin: 0;">Dados Pessoais</h3>
-            <button type="button" class="btn btn-secondary" id="btn-voltar-lista" style="padding: 6px 12px; font-size: 0.8rem;">
+          <div
+            style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              margin-bottom: 15px;
+            "
+          >
+            <h3
+              style="
+                font-size: 0.9rem;
+                color: var(--primary);
+                text-transform: uppercase;
+                margin: 0;
+              "
+            >
+              Dados Pessoais
+            </h3>
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="btn-voltar-lista"
+              style="padding: 6px 12px; font-size: 0.8rem"
+            >
               <i class="ph ph-arrow-left"></i> Voltar para Lista
-            </button>          
-          <input type="hidden" id="cad_cliente_index" value="-1" />
-            
+            </button>
+            <input type="hidden" id="cad_cliente_index" value="-1" />
           </div>
-          
+
           <div class="form-grid">
             <div class="form-control">
               <label for="cad_cliente_nome">Nome Completo *</label>
-              <input type="text" id="cad_cliente_nome" name="nome" placeholder="NOME DO CLIENTE" required />
+              <input
+                type="text"
+                id="cad_cliente_nome"
+                name="nome"
+                placeholder="NOME DO CLIENTE"
+                required
+              />
             </div>
             <div class="form-control">
               <label for="cad_cliente_cpf">CPF *</label>
-              <input type="text" id="cad_cliente_cpf" name="cpf" placeholder="000.000.000-00" data-mascara="cpf" maxlength="14" required />
+              <input
+                type="text"
+                id="cad_cliente_cpf"
+                name="cpf"
+                placeholder="000.000.000-00"
+                data-mascara="cpf"
+                maxlength="14"
+                required
+              />
             </div>
             <div class="form-control">
               <label for="cad_cliente_telefone">Telefone *</label>
-              <input type="text" id="cad_cliente_telefone" name="telefone" placeholder="(00) 00000-0000" data-mascara="telefone" maxlength="15" required />
+              <input
+                type="text"
+                id="cad_cliente_telefone"
+                name="telefone"
+                placeholder="(00) 00000-0000"
+                data-mascara="telefone"
+                maxlength="15"
+                required
+              />
             </div>
             <div class="form-control">
               <label for="cad_cliente_cep">CEP *</label>
               <div class="input-icon-group">
-                <input type="text" id="cad_cliente_cep" name="cep" placeholder="00000-000" data-mascara="cep" maxlength="9" required />
+                <input
+                  type="text"
+                  id="cad_cliente_cep"
+                  name="cep"
+                  placeholder="00000-000"
+                  data-mascara="cep"
+                  maxlength="9"
+                  required
+                />
                 <i class="ph ph-magnifying-glass" id="icon-cad-cep-loading"></i>
               </div>
             </div>
             <div class="form-control">
               <label for="cad_cliente_endereco">Endereço *</label>
-              <input type="text" id="cad_cliente_endereco" name="endereco" placeholder="Rua / Avenida" required />
+              <input
+                type="text"
+                id="cad_cliente_endereco"
+                name="endereco"
+                placeholder="Rua / Avenida"
+                required
+              />
             </div>
             <div class="form-control">
               <label for="cad_cliente_numero">Nº *</label>
-              <input type="text" id="cad_cliente_numero" name="numero" placeholder="Número" required />
+              <input
+                type="text"
+                id="cad_cliente_numero"
+                name="numero"
+                placeholder="Número"
+                required
+              />
             </div>
             <div class="form-control">
               <label for="cad_cliente_bairro">Bairro *</label>
-              <input type="text" id="cad_cliente_bairro" name="bairro" placeholder="Bairro" required />
+              <input
+                type="text"
+                id="cad_cliente_bairro"
+                name="bairro"
+                placeholder="Bairro"
+                required
+              />
             </div>
             <div class="form-control">
               <label for="cad_cliente_cidade">Cidade *</label>
-              <input type="text" id="cad_cliente_cidade" name="cidade" placeholder="Cidade" required />
+              <input
+                type="text"
+                id="cad_cliente_cidade"
+                name="cidade"
+                placeholder="Cidade"
+                required
+              />
             </div>
           </div>
 
-<h3 style="font-size: 0.9rem; color: var(--primary); margin-bottom: 15px; text-transform: uppercase;">Veículos do Cliente</h3>
-          
-          <div class="form-grid" style="align-items: end; background: var(--bg-body); padding: 15px; border-radius: 8px; border: 1px dashed var(--border);">
-            
+          <h3
+            style="
+              font-size: 0.9rem;
+              color: var(--primary);
+              margin-bottom: 15px;
+              text-transform: uppercase;
+            "
+          >
+            Veículos do Cliente
+          </h3>
+
+          <div
+            class="form-grid"
+            style="
+              align-items: end;
+              background: var(--bg-body);
+              padding: 15px;
+              border-radius: 8px;
+              border: 1px dashed var(--border);
+            "
+          >
             <div class="form-control">
               <label>Placa *</label>
-              <input type="text" id="temp_veiculo_placa" placeholder="ABC-1234" data-mascara="placa" maxlength="8" />
+              <input
+                type="text"
+                id="temp_veiculo_placa"
+                placeholder="ABC-1234"
+                data-mascara="placa"
+                maxlength="8"
+              />
             </div>
-            
+
             <div class="form-control">
               <label>Nº Chassi</label>
-              <input type="text" id="temp_veiculo_chassi" placeholder="CHASSI" data-mascara="chassi" maxlength="17" />
+              <input
+                type="text"
+                id="temp_veiculo_chassi"
+                placeholder="CHASSI"
+                data-mascara="chassi"
+                maxlength="17"
+              />
             </div>
-            
+
             <div class="form-control">
               <label>Marca</label>
               <input type="text" id="temp_veiculo_marca" placeholder="EX: VW" />
             </div>
-            
+
             <div class="form-control">
               <label>Modelo/Versão</label>
-              <input type="text" id="temp_veiculo_modelo" placeholder="EX: GOL 1.6" />
+              <input
+                type="text"
+                id="temp_veiculo_modelo"
+                placeholder="EX: GOL 1.6"
+              />
             </div>
 
             <div class="form-control">
               <label>Ano/Modelo</label>
-              <input type="text" id="temp_veiculo_ano" placeholder="2012/2013" data-mascara="ano_modelo" maxlength="9" />
+              <input
+                type="text"
+                id="temp_veiculo_ano"
+                placeholder="2012/2013"
+                data-mascara="ano_modelo"
+                maxlength="9"
+              />
             </div>
 
             <div class="form-control">
               <label>Cor</label>
-              <input type="text" id="temp_veiculo_cor" placeholder="EX: PRATA" />
+              <input
+                type="text"
+                id="temp_veiculo_cor"
+                placeholder="EX: PRATA"
+              />
             </div>
 
             <div class="form-control">
               <label>Combustível</label>
-              <select id="temp_veiculo_combustivel" style="width: 100%; padding: 10px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text-primary); outline: none;">
+              <select
+                id="temp_veiculo_combustivel"
+                style="
+                  width: 100%;
+                  padding: 10px;
+                  border-radius: 4px;
+                  border: 1px solid var(--border);
+                  background: var(--bg-input);
+                  color: var(--text-primary);
+                  outline: none;
+                "
+              >
                 <option value="">Selecione...</option>
                 <option value="ALCOOL">Álcool</option>
                 <option value="GASOLINA">Gasolina</option>
@@ -1012,14 +1119,22 @@
               </select>
             </div>
 
-            <div class="form-control" style="grid-column: 1 / -1; margin-top: 5px;">
-              <button type="button" class="btn btn-secondary" id="btn-add-veiculo" style="width: 100%; justify-content: center;">
+            <div
+              class="form-control"
+              style="grid-column: 1 / -1; margin-top: 5px"
+            >
+              <button
+                type="button"
+                class="btn btn-secondary"
+                id="btn-add-veiculo"
+                style="width: 100%; justify-content: center"
+              >
                 <i class="ph ph-plus-circle"></i> Adicionar Veículo à Lista
               </button>
             </div>
           </div>
 
-          <div class="table-container" style="margin-top: 15px;">
+          <div class="table-container" style="margin-top: 15px">
             <table>
               <thead>
                 <tr>
@@ -1031,7 +1146,14 @@
               </thead>
               <tbody id="lista-veiculos-cadastro">
                 <tr>
-                  <td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px;">
+                  <td
+                    colspan="4"
+                    style="
+                      text-align: center;
+                      color: var(--text-secondary);
+                      padding: 20px;
+                    "
+                  >
                     Nenhum veículo adicionado.
                   </td>
                 </tr>
@@ -1039,7 +1161,14 @@
             </table>
           </div>
 
-          <div class="actions" style="margin-top: 25px; border-top: 1px solid var(--border); padding-top: 20px;">
+          <div
+            class="actions"
+            style="
+              margin-top: 25px;
+              border-top: 1px solid var(--border);
+              padding-top: 20px;
+            "
+          >
             <button class="btn btn-primary" type="submit">
               <i class="ph ph-floppy-disk"></i>
               <span>Salvar Cliente</span>
@@ -1048,56 +1177,147 @@
         </form>
       </div>
     </div>
-    
-    <div id="modal-selecionar-veiculo" class="modal-overlay hidden" style="z-index: 2500;">
-      <div class="modal-form" style="max-width: 450px; text-align: center;">
-        <h3 style="margin-bottom: 10px; color: var(--primary);">Selecione o Veículo</h3>
-        <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.9rem;">Este cliente possui múltiplos veículos. Qual está dando entrada hoje?</p>
-        
-        <div id="lista-botoes-veiculos" style="display: flex; flex-direction: column; gap: 10px;">
-          </div>
-        
-        <button type="button" class="btn btn-secondary" style="margin-top: 20px; width: 100%; justify-content: center;" onclick="document.getElementById('modal-selecionar-veiculo').classList.add('hidden')">
+
+    <div
+      id="modal-selecionar-veiculo"
+      class="modal-overlay hidden"
+      style="z-index: 2500"
+    >
+      <div class="modal-form" style="max-width: 450px; text-align: center">
+        <h3 style="margin-bottom: 10px; color: var(--primary)">
+          Selecione o Veículo
+        </h3>
+        <p
+          style="
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+          "
+        >
+          Este cliente possui múltiplos veículos. Qual está dando entrada hoje?
+        </p>
+
+        <div
+          id="lista-botoes-veiculos"
+          style="display: flex; flex-direction: column; gap: 10px"
+        ></div>
+
+        <button
+          type="button"
+          class="btn btn-secondary"
+          style="margin-top: 20px; width: 100%; justify-content: center"
+          onclick="
+            document
+              .getElementById('modal-selecionar-veiculo')
+              .classList.add('hidden')
+          "
+        >
           Cancelar
         </button>
       </div>
     </div>
 
-    <div id="modal-confirmacao-excluir" class="modal-overlay hidden" style="z-index: 3000;">
-      <div class="modal-form" style="max-width: 400px; text-align: center; padding: 30px 20px">
-        <i class="ph ph-warning-circle" style="font-size: 4rem; color: var(--primary); margin-bottom: 15px; display: inline-block;"></i>
-        <h3 style="margin: 0 0 10px 0; color: var(--text-primary); font-size: 1.5rem;">
+    <div
+      id="modal-confirmacao-excluir"
+      class="modal-overlay hidden"
+      style="z-index: 3000"
+    >
+      <div
+        class="modal-form"
+        style="max-width: 400px; text-align: center; padding: 30px 20px"
+      >
+        <i
+          class="ph ph-warning-circle"
+          style="
+            font-size: 4rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: inline-block;
+          "
+        ></i>
+        <h3
+          style="
+            margin: 0 0 10px 0;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+          "
+        >
           Atenção!
         </h3>
-        <p style="color: var(--text-secondary); margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5;">
+        <p
+          style="
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+          "
+        >
           Tem certeza que deseja excluir este cliente permanentemente?
         </p>
         <div style="display: flex; gap: 15px; justify-content: center">
-          <button type="button" class="btn btn-secondary" id="btn-cancelar-excluir">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="btn-cancelar-excluir"
+          >
             Cancelar
           </button>
-          <button type="button" class="btn btn-primary" id="btn-confirmar-excluir">
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="btn-confirmar-excluir"
+          >
             Sim, excluir
           </button>
         </div>
       </div>
     </div>
 
-    <div id="modal-sucesso" class="modal-overlay hidden" style="z-index: 3000;">
-      <div class="modal-form" style="max-width: 400px; text-align: center; padding: 30px 20px">
-        <i class="ph ph-check-circle" style="font-size: 4rem; color: #00b37e; margin-bottom: 15px; display: inline-block;"></i>
-        <h3 style="margin: 0 0 10px 0; color: var(--text-primary); font-size: 1.5rem;">
+    <div id="modal-sucesso" class="modal-overlay hidden" style="z-index: 3000">
+      <div
+        class="modal-form"
+        style="max-width: 400px; text-align: center; padding: 30px 20px"
+      >
+        <i
+          class="ph ph-check-circle"
+          style="
+            font-size: 4rem;
+            color: #00b37e;
+            margin-bottom: 15px;
+            display: inline-block;
+          "
+        ></i>
+        <h3
+          style="
+            margin: 0 0 10px 0;
+            color: var(--text-primary);
+            font-size: 1.5rem;
+          "
+        >
           Tudo certo!
         </h3>
-        <p id="texto-modal-sucesso" style="color: var(--text-secondary); margin-bottom: 25px; font-size: 0.95rem; line-height: 1.5;">
+        <p
+          id="texto-modal-sucesso"
+          style="
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+          "
+        >
           Operação realizada com sucesso.
         </p>
-        <button type="button" class="btn btn-primary" id="btn-fechar-sucesso" style="width: 100%; justify-content: center;">
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="btn-fechar-sucesso"
+          style="width: 100%; justify-content: center"
+        >
           OK, Entendi
         </button>
       </div>
     </div>
-    
+
     <script src="js/main.js"></script>
   </body>
 </html>
