@@ -292,6 +292,15 @@ function fecharModalSucesso() {
   document.getElementById("modal-sucesso").classList.add("hidden");
 }
 
+function abrirModalAviso(mensagem) {
+  document.getElementById("texto-modal-aviso").innerText = mensagem;
+  document.getElementById("modal-aviso").classList.remove("hidden");
+}
+
+function fecharModalAviso() {
+  document.getElementById("modal-aviso").classList.add("hidden");
+}
+
 // ==========================================
 // 5. BANCO DE CHECKLISTS E HISTÓRICO
 // ==========================================
@@ -617,12 +626,23 @@ function aplicarMascara(evento) {
 // ==========================================
 // FUNÇÕES DE AUTOMAÇÃO DO CHECKLIST
 // ==========================================
-function atualizarSugestoesClientes() {
+function atualizarSugestoesClientes(termoPesquisa = "") {
   const datalist = document.getElementById("lista-clientes-sugestao");
   if (!datalist) return;
 
+  // 1. Limpa a lista sempre que a função for chamada
   datalist.innerHTML = "";
-  bancoClientesFalso.forEach((cliente) => {
+
+  // 2. Trava de segurança: Se tiver menos de 3 letras, não faz nada!
+  if (termoPesquisa.length < 3) return;
+
+  // 3. Procura no banco só quem tem o termo digitado
+  const filtrados = bancoClientesFalso.filter((c) =>
+    (c.nome || "").toUpperCase().includes(termoPesquisa),
+  );
+
+  // 4. Cria as opções só com os resultados encontrados
+  filtrados.forEach((cliente) => {
     datalist.innerHTML += `<option value="${cliente.nome}"></option>`;
   });
 }
@@ -710,6 +730,11 @@ window.onload = function () {
   document
     .getElementById("btn-fechar-sucesso")
     .addEventListener("click", fecharModalSucesso);
+
+  // Ligar botão do modal de aviso
+  document
+    .getElementById("btn-fechar-aviso")
+    .addEventListener("click", fecharModalAviso);
 
   // Eventos da Modal de Histórico
   document
@@ -828,7 +853,7 @@ window.onload = function () {
     .addEventListener("input", renderizarListaClientesCadastrados);
 
   // =======================================================
-  // ATUALIZANDO O SALVAR CLIENTE: (COM MODO EDIÇÃO E BANCO)
+  // ATUALIZANDO O SALVAR CLIENTE: (COM TRAVA DE CPF)
   // =======================================================
   document
     .getElementById("form-cadastro-cliente")
@@ -839,12 +864,38 @@ window.onload = function () {
         const formData = new FormData(this);
         const dadosCliente = Object.fromEntries(formData.entries());
 
+        // 👇 Puxa a posição do cliente lá daquele campo invisível
+        const indexEdicao = document.getElementById("cad_cliente_index").value;
+
+        // =======================================================
+        // 🚨 NOVA TRAVA DE SEGURANÇA: VERIFICAÇÃO DE CPF DUPLICADO
+        // =======================================================
+        const cpfDigitado = (dadosCliente.cpf || "").trim();
+
+        // Só faz a busca no banco se o campo não estiver vazio
+        if (cpfDigitado !== "") {
+          const clienteDuplicado = bancoClientesFalso.find(
+            (clienteSalvo, index) => {
+              // Verifica se o CPF bate E se NÃO é a própria pessoa que estamos editando
+              const cpfBate = clienteSalvo.cpf === cpfDigitado;
+              const eOutraPessoa = index.toString() !== indexEdicao.toString();
+
+              return cpfBate && eOutraPessoa;
+            },
+          );
+
+          // Se achou alguém com esse CPF, barra tudo!
+          if (clienteDuplicado) {
+            abrirModalAviso(`Este CPF já está cadastrado no sistema para o cliente:\n👤 ${clienteDuplicado.nome}`);
+            document.getElementById("cad_cliente_cpf").focus(); // Devolve o cursor pro campo
+            return; // 🛑 PARA A EXECUÇÃO AQUI! Não salva e não fecha o modal.
+          }
+        }
+        // =======================================================
+
         // Força o nome a ficar maiúsculo antes de salvar e vincula os carros
         dadosCliente.nome = (dadosCliente.nome || "").toUpperCase();
         dadosCliente.veiculos = veiculosTemporarios || [];
-
-        // 👇 Puxa a posição do cliente lá daquele campo invisível
-        const indexEdicao = document.getElementById("cad_cliente_index").value;
 
         if (indexEdicao === "-1" || indexEdicao === "") {
           // Se for -1, significa que clicamos em NOVO CLIENTE
@@ -883,6 +934,8 @@ window.onload = function () {
       const nomeDigitado = this.value.toUpperCase(); // Força maiúsculo pra evitar erro de busca
       this.value = nomeDigitado; // Mantém a caixa de texto em maiúsculo
 
+      atualizarSugestoesClientes(nomeDigitado);
+
       // Procura no nosso "banco" se esse cliente existe
       const clienteEncontrado = bancoClientesFalso.find(
         (c) => c.nome.toUpperCase() === nomeDigitado,
@@ -904,6 +957,9 @@ window.onload = function () {
           clienteEncontrado.bairro || "";
         document.getElementById("cliente_cidade").value =
           clienteEncontrado.cidade || "";
+        const campoUfPrincipal = document.getElementById("cliente_uf");
+        if (campoUfPrincipal)
+          campoUfPrincipal.value = clienteEncontrado.uf || "";
 
         // E os veículos?
         const veiculos = clienteEncontrado.veiculos;
@@ -1203,6 +1259,7 @@ function editarCliente(index) {
   document.getElementById("cad_cliente_numero").value = cliente.numero || "";
   document.getElementById("cad_cliente_bairro").value = cliente.bairro || "";
   document.getElementById("cad_cliente_cidade").value = cliente.cidade || "";
+  document.getElementById("cad_cliente_uf").value = cliente.uf || "";
 
   // 3. Puxa os carros dele de volta pra tabela temporária
   veiculosTemporarios = cliente.veiculos ? [...cliente.veiculos] : [];

@@ -62,7 +62,7 @@
       </header>
 
       <main>
-        <form id="form-checklist">
+        <form id="form-checklist" autocomplete="off">
           <section class="card">
             <h2><i class="ph ph-note-pencil"></i> Modo do Registro</h2>
             <div
@@ -103,12 +103,15 @@
             <h2><i class="ph ph-clock"></i> Entrada</h2>
             <div class="form-grid">
               <div class="form-control">
-                <label for="mecanico_responsavel">Mecânico Responsável</label>
+                <label for="mecanico_responsavel"
+                  >Responsável Pelo Registro</label
+                >
                 <input
                   type="text"
                   id="mecanico_responsavel"
                   name="mecanico_responsavel"
-                  placeholder="Nome do Mecânico"
+                  placeholder="Nome do Responsavel"
+                  autocomplete="new-password"
                   required
                 />
               </div>
@@ -164,7 +167,7 @@
                     name="cliente_nome"
                     list="lista-clientes-sugestao"
                     placeholder="DIGITE O NOME..."
-                    autocomplete="off"
+                    autocomplete="none"
                     required
                   />
                   <i class="ph ph-magnifying-glass" id="icon-nome-loading"></i>
@@ -191,6 +194,7 @@
                   placeholder="(00) 00000-0000"
                   data-mascara="telefone"
                   maxlength="15"
+                  autocomplete="new-password"
                   required
                 />
               </div>
@@ -204,19 +208,21 @@
                     placeholder="00000-000"
                     data-mascara="cep"
                     maxlength="9"
+                    autocomplete="new-password"
                   />
                   <i class="ph ph-magnifying-glass" id="icon-cep-loading"></i>
                 </div>
               </div>
               <div class="form-control">
                 <label for="cliente_uf">UF</label>
-                <select id="cliente_uf" name="cliente_uf">
-                  <option value="">Selecione...</option>
-                  <option value="SP">SP</option>
-                  <option value="RJ">RJ</option>
-                  <option value="MG">MG</option>
-                  <option value="PR">PR</option>
-                </select>
+                <input
+                  type="text"
+                  id="cliente_uf"
+                  name="cliente_uf"
+                  placeholder="UF"
+                  readonly
+                  style="cursor: not-allowed; background: var(--bg-body)"
+                />
               </div>
               <div class="form-control">
                 <label for="cliente_cidade">Cidade</label>
@@ -225,6 +231,7 @@
                   id="cliente_cidade"
                   name="cliente_cidade"
                   placeholder="Cidade"
+                  autocomplete="new-password"
                 />
               </div>
               <div class="form-control">
@@ -234,6 +241,7 @@
                   id="cliente_bairro"
                   name="cliente_bairro"
                   placeholder="Bairro"
+                  autocomplete="new-password"
                 />
               </div>
               <div class="form-control">
@@ -243,6 +251,7 @@
                   id="cliente_endereco"
                   name="cliente_endereco"
                   placeholder="Rua / Avenida"
+                  autocomplete="new-password"
                 />
               </div>
               <div class="form-control">
@@ -252,6 +261,7 @@
                   id="cliente_numero"
                   name="cliente_numero"
                   placeholder="Número"
+                  autocomplete="new-password"
                 />
               </div>
             </div>
@@ -832,7 +842,11 @@
       </div>
     </div>
 
-    <div id="modal-gestao-clientes" class="modal-overlay hidden">
+    <div
+      id="modal-gestao-clientes"
+      class="modal-overlay hidden"
+      autocomplete="off"
+    >
       <div class="modal-form" style="max-width: 900px">
         <div class="modal-header">
           <h3
@@ -898,7 +912,7 @@
           </div>
         </div>
 
-        <form id="form-cadastro-cliente" class="hidden">
+        <form id="form-cadastro-cliente" class="hidden" autocomplete="off">
           <div
             style="
               display: flex;
@@ -936,11 +950,14 @@
                 id="cad_cliente_nome"
                 name="nome"
                 placeholder="NOME DO CLIENTE"
+                autocomplete="off"
+                readonly
+                onfocus="this.removeAttribute('readonly')"
                 required
               />
             </div>
             <div class="form-control">
-              <label for="cad_cliente_cpf">CPF *</label>
+              <label for="cad_cliente_cpf">CPF</label>
               <input
                 type="text"
                 id="cad_cliente_cpf"
@@ -948,7 +965,7 @@
                 placeholder="000.000.000-00"
                 data-mascara="cpf"
                 maxlength="14"
-                required
+                autocomplete="off"
               />
             </div>
             <div class="form-control">
@@ -960,6 +977,7 @@
                 placeholder="(00) 00000-0000"
                 data-mascara="telefone"
                 maxlength="15"
+                autocomplete="nope"
                 required
               />
             </div>
@@ -973,6 +991,7 @@
                   placeholder="00000-000"
                   data-mascara="cep"
                   maxlength="9"
+                  autocomplete="nope"
                   required
                 />
                 <i class="ph ph-magnifying-glass" id="icon-cad-cep-loading"></i>
@@ -985,6 +1004,7 @@
                 id="cad_cliente_endereco"
                 name="endereco"
                 placeholder="Rua / Avenida"
+                autocomplete="nope"
                 required
               />
             </div>
@@ -995,6 +1015,7 @@
                 id="cad_cliente_numero"
                 name="numero"
                 placeholder="Número"
+                autocomplete="nope"
                 required
               />
             </div>
@@ -1005,6 +1026,7 @@
                 id="cad_cliente_bairro"
                 name="bairro"
                 placeholder="Bairro"
+                autocomplete="nope"
                 required
               />
             </div>
@@ -1015,7 +1037,21 @@
                 id="cad_cliente_cidade"
                 name="cidade"
                 placeholder="Cidade"
+                autocomplete="nope"
                 required
+              />
+            </div>
+
+            <div class="form-control">
+              <label for="cad_cliente_uf">UF *</label>
+              <input
+                type="text"
+                id="cad_cliente_uf"
+                name="uf"
+                placeholder="UF"
+                readonly
+                required
+                style="cursor: not-allowed; background: var(--bg-body)"
               />
             </div>
           </div>
@@ -1314,6 +1350,46 @@
           style="width: 100%; justify-content: center"
         >
           OK, Entendi
+        </button>
+      </div>
+    </div>
+
+    <div id="modal-aviso" class="modal-overlay hidden" style="z-index: 9999">
+      <div
+        class="modal-form"
+        style="max-width: 400px; text-align: center; padding: 30px"
+      >
+        <i
+          class="ph ph-warning-circle"
+          style="font-size: 4rem; color: #ef4444; margin-bottom: 15px"
+        ></i>
+        <h3 style="color: var(--text-primary); margin-bottom: 10px">
+          Atenção!
+        </h3>
+
+        <p
+          id="texto-modal-aviso"
+          style="
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+            line-height: 1.5;
+            font-size: 1.1rem;
+            font-weight: 500;
+          "
+        ></p>
+
+        <button
+          type="button"
+          class="btn btn-primary"
+          id="btn-fechar-aviso"
+          style="
+            width: 100%;
+            justify-content: center;
+            background: #ef4444;
+            border-color: #ef4444;
+          "
+        >
+          Entendi
         </button>
       </div>
     </div>
