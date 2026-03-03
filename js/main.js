@@ -99,22 +99,16 @@ function confirmarLimpeza() {
 }
 
 // ==========================================
-// IMPRESSÃO PADRÃO (NOVA JANELA / ORDEM DE SERVIÇO)
 // ==========================================
-document.getElementById("btn-imprimir").addEventListener("click", () => {
-  // 1. Coleta os dados do formulário
-  const form = document.getElementById("form-checklist");
-  const formData = new FormData(form);
-  const dados = Object.fromEntries(formData.entries());
-  const nivelCombustivel =
-    document.getElementById("nivel_combustivel").value || "VAZIO";
+// MÓDULO DE IMPRESSÃO (ORDEM DE SERVIÇO)
+// ==========================================
 
-  // 2. Tradutor do Diagnóstico (R$)
+// 1. A "Fábrica" de PDFs (Centraliza a criação do documento)
+function gerarPDFImpressao(dados, nivelCombustivel) {
   let valorDiagnostico = "NÃO SOLICITADO";
   if (dados.diagnostico === "POPULAR") valorDiagnostico = "R$ 250,00";
   if (dados.diagnostico === "PREMIUM") valorDiagnostico = "R$ 350,00";
 
-  // 3. MÁGICA DAS ASSINATURAS: Verifica se veio de guincho para adicionar a 3ª linha
   let assinaturasHtml = "";
   if (dados.guincho === "SIM") {
     assinaturasHtml = `
@@ -129,13 +123,11 @@ document.getElementById("btn-imprimir").addEventListener("click", () => {
     `;
   }
 
-  // 4. MÁGICA DA IMAGEM: Força o caminho absoluto para a logo não sumir
   const logoUrl = new URL(
     "img/logo-preta.png",
     window.location.origin + window.location.pathname,
   ).href;
 
-  // 5. Monta o HTML do documento
   const htmlContent = `
       <html>
       <head>
@@ -143,10 +135,8 @@ document.getElementById("btn-imprimir").addEventListener("click", () => {
         <style>
           @page { margin: 0; }
           body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; margin: 15mm; color: #000; line-height: 1.5; }
-          
           .header { display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 15px; }
           .header-title { font-size: 24px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
-          
           .box { border: 1px solid #000; margin-bottom: 18px; border-radius: 4px; overflow: hidden; }
           .box-header { background: #eee; padding: 4px 8px; font-weight: bold; border-bottom: 1px solid #000; font-size: 12px; text-transform: uppercase; }
           .box-content { padding: 6px; }
@@ -160,7 +150,6 @@ document.getElementById("btn-imprimir").addEventListener("click", () => {
           .auth-row { margin-bottom: 6px; display: flex; align-items: center; }
           .auth-check { font-family: monospace; font-weight: bold; margin-right: 12px; min-width: 100px; }
           .auth-text { flex: 1; font-weight: bold; text-transform: uppercase; }
-          
           @media print {
             .box-header { background: #ddd !important; -webkit-print-color-adjust: exact; color-adjust: exact; }
           }
@@ -252,7 +241,26 @@ document.getElementById("btn-imprimir").addEventListener("click", () => {
     win.focus();
     win.print();
   }, 800);
+}
+
+// 2. Botão de Imprimir da Tela Principal (Lê a tela e manda pra Fábrica)
+document.getElementById("btn-imprimir").addEventListener("click", () => {
+  const form = document.getElementById("form-checklist");
+  const formData = new FormData(form);
+  const dados = Object.fromEntries(formData.entries());
+  const nivelCombustivel =
+    document.getElementById("nivel_combustivel").value || "VAZIO";
+
+  gerarPDFImpressao(dados, nivelCombustivel);
 });
+
+// 3. Nova Função: Botão de Imprimir do Histórico (Lê o banco e manda pra Fábrica)
+function imprimirDoHistorico(index) {
+  const dados = bancoChecklists[index];
+  const nivelCombustivel = dados.nivel_combustivel || "VAZIO";
+
+  gerarPDFImpressao(dados, nivelCombustivel);
+}
 
 function abrirHistorico() {
   document.getElementById("modal-historico").classList.remove("hidden");
@@ -411,10 +419,19 @@ function abrirDetalhesCliente(nomeCliente) {
           <td><strong>${placa}</strong></td>
           <td>${veiculo}</td>
           <td>${data}</td>
-          <td style="text-align: right">
-            <button type="button" class="icon-btn" title="Visualizar Checklist" onclick="carregarChecklistNaTela(${index})">
-              <i class="ph ph-eye" style="font-size: 1.2rem; color: var(--primary);"></i>
-            </button>
+          <td style="text-align: right;">
+            <div style="display: flex; justify-content: flex-end; gap: 8px;">
+              <button type="button" class="icon-btn" title="Visualizar Checklist" onclick="carregarChecklistNaTela(${index})">
+                <i class="ph ph-eye" style="font-size: 1.2rem; color: var(--primary);"></i>
+              </button>
+              
+              <button type="button" class="icon-btn" title="Imprimir OS" onclick="imprimirDoHistorico(${index})" style="color: var(--text-primary);">
+                <i class="ph ph-printer" style="font-size: 1.2rem;"></i>
+              </button>
+              <button type="button" class="icon-btn btn-danger" title="Excluir Checklist" onclick="excluirChecklist(${index}, '${nomeCliente}')">
+                <i class="ph ph-trash" style="font-size: 1.2rem;"></i>
+              </button>
+            </div>
           </td>
         </tr>
       `;
@@ -430,6 +447,50 @@ function fecharDetalhesCliente() {
   document.getElementById("modal-historico").classList.remove("hidden");
 }
 
+// Variáveis para o sistema lembrar o que você quer apagar
+let checklistIndexParaExcluir = -1;
+let nomeClienteChecklistParaExcluir = "";
+
+function excluirChecklist(index, nomeCliente) {
+  // Abre o modal BONITO em vez do alerta feio
+  checklistIndexParaExcluir = index;
+  nomeClienteChecklistParaExcluir = nomeCliente;
+  document.getElementById("modal-excluir-checklist").classList.remove("hidden");
+}
+
+function fecharModalExcluirChecklist() {
+  document.getElementById("modal-excluir-checklist").classList.add("hidden");
+  checklistIndexParaExcluir = -1;
+  nomeClienteChecklistParaExcluir = "";
+}
+
+function confirmarExclusaoChecklist() {
+  if (checklistIndexParaExcluir > -1) {
+    // 1. Remove da memória
+    bancoChecklists.splice(checklistIndexParaExcluir, 1);
+
+    // 2. Salva no navegador e atualiza a tabela geral
+    salvarBancoChecklists();
+    renderizarTabelaClientes();
+
+    // 3. Verifica se o cliente ainda tem outro checklist salvo
+    const aindaTemChecklist = bancoChecklists.some(
+      (chk) =>
+        (chk.cliente_nome || "SEM NOME").toUpperCase() ===
+        nomeClienteChecklistParaExcluir,
+    );
+
+    if (aindaTemChecklist) {
+      abrirDetalhesCliente(nomeClienteChecklistParaExcluir);
+    } else {
+      fecharDetalhesCliente();
+    }
+
+    // 4. Fecha a pergunta e mostra a mensagem de sucesso!
+    fecharModalExcluirChecklist();
+    abrirModalSucesso("Checklist excluído com sucesso!");
+  }
+}
 // A MÁGICA DE PREENCHER TUDO DE NOVO
 function carregarChecklistNaTela(index) {
   const chk = bancoChecklists[index];
@@ -472,6 +533,7 @@ function carregarChecklistNaTela(index) {
   // 5. Muda o Visual do Topo (Mostra que estamos visualizando algo antigo)
   document.getElementById("status-edicao").innerText = "VISUALIZANDO HISTÓRICO";
   document.getElementById("status-edicao").style.background = "var(--primary)";
+  document.getElementById("status-edicao").style.color = "#FFFFFF";
   document.getElementById("btn-cancelar-edicao").style.display = "flex";
 
   // Troca o botão de Salvar pelo de Imprimir!
@@ -736,6 +798,14 @@ window.onload = function () {
     .getElementById("btn-fechar-aviso")
     .addEventListener("click", fecharModalAviso);
 
+  // Ligar os botões do Modal de Exclusão de Checklist
+  document
+    .getElementById("btn-cancelar-excluir-checklist")
+    .addEventListener("click", fecharModalExcluirChecklist);
+  document
+    .getElementById("btn-confirmar-excluir-checklist")
+    .addEventListener("click", confirmarExclusaoChecklist);
+
   // Eventos da Modal de Histórico
   document
     .getElementById("btn-fechar-historico")
@@ -886,7 +956,9 @@ window.onload = function () {
 
           // Se achou alguém com esse CPF, barra tudo!
           if (clienteDuplicado) {
-            abrirModalAviso(`Este CPF já está cadastrado no sistema para o cliente:\n👤 ${clienteDuplicado.nome}`);
+            abrirModalAviso(
+              `Este CPF já está cadastrado no sistema para o cliente:\n👤 ${clienteDuplicado.nome}`,
+            );
             document.getElementById("cad_cliente_cpf").focus(); // Devolve o cursor pro campo
             return; // 🛑 PARA A EXECUÇÃO AQUI! Não salva e não fecha o modal.
           }
@@ -1172,21 +1244,9 @@ function carregarBancoClientes() {
   if (dadosSalvos) {
     bancoClientesFalso = JSON.parse(dadosSalvos);
   } else {
-    // Lista inicial (só roda na primeira vez)
-    bancoClientesFalso = [
-      {
-        nome: "RAFAELA (EXEMPLO)",
-        cpf: "420.000.000-00",
-        telefone: "(15) 99700-0000",
-        cep: "18274-882",
-        endereco: "Silvio Almeida Sinisgali",
-        numero: "353",
-        bairro: "PACAEMBU",
-        cidade: "Tatuí",
-        veiculos: [{ placa: "ABC-1234", marca: "VW", modelo: "GOL" }],
-      },
-    ];
-    salvarBancoClientes(); // Salva a Rafaela no navegador
+    // Lista inicial completamente vazia para a oficina!
+    bancoClientesFalso = [];
+    salvarBancoClientes();
   }
 }
 

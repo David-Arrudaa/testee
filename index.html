@@ -116,7 +116,7 @@
                 />
               </div>
               <div class="form-control">
-                <label for="data_entrada">Data Entrada (Automático)</label>
+                <label for="data_entrada">Data Entrada</label>
                 <input
                   type="text"
                   id="data_entrada"
@@ -126,9 +126,7 @@
                 />
               </div>
               <div class="form-control">
-                <label for="horario_entrada"
-                  >Horário Entrada (Automático)</label
-                >
+                <label for="horario_entrada">Horário Entrada</label>
                 <input
                   type="text"
                   id="horario_entrada"
@@ -157,9 +155,7 @@
             <h2><i class="ph ph-user"></i> Dados do Cliente</h2>
             <div class="form-grid">
               <div class="form-control">
-                <label for="cliente_nome"
-                  >Nome Completo (Busca Automática)</label
-                >
+                <label for="cliente_nome">Nome Completo</label>
                 <div class="input-icon-group">
                   <input
                     type="text"
@@ -271,9 +267,7 @@
             <h2><i class="ph ph-car"></i> Dados do Veículo</h2>
             <div class="form-grid">
               <div class="form-control">
-                <label for="veiculo_placa"
-                  >Placa (Busca Automática no futuro)</label
-                >
+                <label for="veiculo_placa">Placa</label>
                 <div class="input-icon-group">
                   <input
                     type="text"
@@ -1395,6 +1389,58 @@
         >
           Entendi
         </button>
+      </div>
+    </div>
+
+    <div
+      id="modal-excluir-checklist"
+      class="modal-overlay hidden"
+      style="z-index: 9999"
+    >
+      <div
+        class="modal-form"
+        style="max-width: 400px; text-align: center; padding: 30px"
+      >
+        <i
+          class="ph ph-trash"
+          style="font-size: 4rem; color: #ef4444; margin-bottom: 15px"
+        ></i>
+        <h3 style="color: var(--text-primary); margin-bottom: 10px">
+          Excluir Checklist?
+        </h3>
+        <p
+          style="
+            color: var(--text-secondary);
+            margin-bottom: 25px;
+            line-height: 1.5;
+          "
+        >
+          Tem certeza que deseja apagar este checklist do histórico? Esta ação
+          não pode ser desfeita.
+        </p>
+        <div style="display: flex; gap: 15px; justify-content: center">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="btn-cancelar-excluir-checklist"
+            style="flex: 1; justify-content: center"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="btn-confirmar-excluir-checklist"
+            style="
+              flex: 1;
+              justify-content: center;
+              background: #ef4444;
+              border-color: #ef4444;
+            "
+          >
+            Sim, Excluir
+          </button>
+        </div>
       </div>
     </div>
 
