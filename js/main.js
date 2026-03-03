@@ -4,6 +4,18 @@
    ======================================================= */
 
 // ==========================================
+// 🚀 INICIALIZAÇÃO DO BANCO DE DADOS (SUPABASE)
+// ==========================================
+const supabaseUrl = "https://jsbnkcejgbyrkguscean.supabase.co";
+const supabaseKey = "sb_publishable_uK0anINgIBzPcz5pZXuW5A_TCKjOTf2";
+
+// 👇 MUDAMOS O NOME DE 'supabase' PARA 'supabaseClient' PARA EVITAR CONFLITO 👇
+const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+// Faz um teste rápido e silencioso só para ver se conectou
+console.log("Conectando ao motor Supabase...");
+
+// ==========================================
 // 1. MARCADOR DE COMBUSTÍVEL (Gauge)
 // ==========================================
 const MAPA_COMBUSTIVEL = [
@@ -608,6 +620,80 @@ async function buscarCEP(cep, tipoFormulario) {
 }
 
 // ==========================================
+// INTEGRAÇÃO API DE PLACAS (Placas.app.br)
+// ==========================================
+async function buscarPlacaAPI(placaDigitada) {
+  // 1. Limpa o traço para a API entender (ex: vira ABC1234)
+  const placaLimpa = placaDigitada.replace(/[^a-zA-Z0-9]/g, "");
+
+  // Se não tiver 7 dígitos exatos, ele cancela para não gastar sua requisição
+  if (placaLimpa.length !== 7) return;
+
+  const inputPlaca = document.getElementById("temp_veiculo_placa");
+
+  // 👇 DADOS DO SEU INSOMNIA 👇
+  // URL original da API
+  const urlApiOriginal = "https://placas.app.br/api/v1/placas/numero";
+
+  // URL do Proxy "Laranja" para enganar o navegador e pular o CORS
+  const urlApi = "https://corsproxy.io/?" + encodeURIComponent(urlApiOriginal);
+
+  // Cole aqui o seu token JWT completo (aquele grandão que começa com eyJhb...)
+  const tokenPlacas = "COLE_SEU_TOKEN_AQUI";
+
+  try {
+    inputPlaca.style.opacity = "0.5"; // Efeito de carregando
+
+    const resposta = await fetch(urlApi, {
+      method: "POST", // Mudamos para POST conforme o Insomnia
+      headers: {
+        Authorization: `Bearer ${tokenPlacas}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        placa: placaLimpa, // Envia a placa no formato que a API exigiu
+      }),
+    });
+
+    const dados = await resposta.json();
+
+    // ⚠️ IMPRIME NO CONSOLE PARA VOCÊ VER A ESTRUTURA
+    console.log("Resposta da API de Placas:", dados);
+
+    // 2. Preenche as caixinhas se a API não retornar erro
+    if (dados) {
+      // ATENÇÃO: Verifique no console.log se os nomes (marca, modelo) batem com os que a API devolve
+      document.getElementById("temp_veiculo_marca").value = (
+        dados.marca || ""
+      ).toUpperCase();
+      document.getElementById("temp_veiculo_modelo").value = (
+        dados.modelo || ""
+      ).toUpperCase();
+      document.getElementById("temp_veiculo_cor").value = (
+        dados.cor || ""
+      ).toUpperCase();
+      document.getElementById("temp_veiculo_chassi").value = (
+        dados.chassi || ""
+      ).toUpperCase();
+
+      // Monta o ano no padrão da oficina
+      if (dados.anoFabricacao && dados.anoModelo) {
+        document.getElementById("temp_veiculo_ano").value =
+          `${dados.anoFabricacao}/${dados.anoModelo}`;
+      } else if (dados.ano) {
+        document.getElementById("temp_veiculo_ano").value = dados.ano;
+      }
+
+      document.getElementById("temp_veiculo_combustivel").focus();
+    }
+  } catch (erro) {
+    console.error("Erro ao buscar a placa:", erro);
+  } finally {
+    inputPlaca.style.opacity = "1";
+  }
+}
+
+// ==========================================
 // 7. MÁSCARAS DE ENTRADA (Formatação Automática)
 // ==========================================
 const mascaras = {
@@ -686,27 +772,31 @@ function aplicarMascara(evento) {
 // ==========================================
 
 // ==========================================
-// FUNÇÕES DE AUTOMAÇÃO DO CHECKLIST
+// FUNÇÕES DE AUTOMAÇÃO DO CHECKLIST (SUPABASE)
 // ==========================================
-function atualizarSugestoesClientes(termoPesquisa = "") {
+async function atualizarSugestoesClientes(termoPesquisa = "") {
   const datalist = document.getElementById("lista-clientes-sugestao");
   if (!datalist) return;
 
-  // 1. Limpa a lista sempre que a função for chamada
   datalist.innerHTML = "";
+  if (termoPesquisa.length < 3) return; // Só busca se tiver 3 letras ou mais
 
-  // 2. Trava de segurança: Se tiver menos de 3 letras, não faz nada!
-  if (termoPesquisa.length < 3) return;
+  try {
+    // Vai na nuvem e busca até 5 nomes parecidos com o que foi digitado
+    const { data: clientes, error } = await supabaseClient
+      .from("clientes")
+      .select("nome")
+      .ilike("nome", `%${termoPesquisa}%`)
+      .limit(5);
 
-  // 3. Procura no banco só quem tem o termo digitado
-  const filtrados = bancoClientesFalso.filter((c) =>
-    (c.nome || "").toUpperCase().includes(termoPesquisa),
-  );
+    if (error) throw error;
 
-  // 4. Cria as opções só com os resultados encontrados
-  filtrados.forEach((cliente) => {
-    datalist.innerHTML += `<option value="${cliente.nome}"></option>`;
-  });
+    clientes.forEach((cliente) => {
+      datalist.innerHTML += `<option value="${cliente.nome}"></option>`;
+    });
+  } catch (erro) {
+    console.error("Erro ao buscar sugestões:", erro);
+  }
 }
 
 function preencherVeiculoChecklist(veiculo) {
@@ -850,6 +940,13 @@ window.onload = function () {
       buscarCEP(this.value, "cadastro");
     });
 
+  // LIGANDO A BUSCA DE PLACA AUTOMÁTICA
+  document
+    .getElementById("temp_veiculo_placa")
+    .addEventListener("blur", function () {
+      buscarPlacaAPI(this.value);
+    });
+
   // LIGANDO AS MÁSCARAS
   document.querySelectorAll("[data-mascara]").forEach((input) => {
     input.addEventListener("input", aplicarMascara);
@@ -923,124 +1020,200 @@ window.onload = function () {
     .addEventListener("input", renderizarListaClientesCadastrados);
 
   // =======================================================
-  // ATUALIZANDO O SALVAR CLIENTE: (COM TRAVA DE CPF)
+  // SALVAR / EDITAR CLIENTE (SUPABASE COMPLETO)
   // =======================================================
   document
     .getElementById("form-cadastro-cliente")
-    .addEventListener("submit", function (evento) {
+    .addEventListener("submit", async function (evento) {
       evento.preventDefault();
+
+      const btnSalvar = document.getElementById("btn-salvar-cliente");
+      const textoOriginalBotao = btnSalvar.innerHTML;
+
+      // Pega o ID escondido (se for -1 é novo, se for número, estamos editando)
+      const idEdicao = document.getElementById("cad_cliente_index").value;
 
       try {
         const formData = new FormData(this);
         const dadosCliente = Object.fromEntries(formData.entries());
 
-        // 👇 Puxa a posição do cliente lá daquele campo invisível
-        const indexEdicao = document.getElementById("cad_cliente_index").value;
+        const nome = (dadosCliente.nome || "").trim().toUpperCase();
+        const cpf = (dadosCliente.cpf || "").trim();
+        const telefone = (dadosCliente.telefone || "").trim();
+        const cep = (dadosCliente.cep || "").trim();
+        const endereco = (dadosCliente.endereco || "").trim().toUpperCase();
+        const numero = (dadosCliente.numero || "").trim();
+        const bairro = (dadosCliente.bairro || "").trim().toUpperCase();
+        const cidade = (dadosCliente.cidade || "").trim().toUpperCase();
+        const uf = (dadosCliente.uf || "").trim().toUpperCase();
 
-        // =======================================================
-        // 🚨 NOVA TRAVA DE SEGURANÇA: VERIFICAÇÃO DE CPF DUPLICADO
-        // =======================================================
-        const cpfDigitado = (dadosCliente.cpf || "").trim();
+        // 🚨 TRAVA DE CPF NAS NUVENS 🚨
+        if (cpf !== "") {
+          let queryBusca = supabaseClient
+            .from("clientes")
+            .select("id, nome")
+            .eq("cpf", cpf);
 
-        // Só faz a busca no banco se o campo não estiver vazio
-        if (cpfDigitado !== "") {
-          const clienteDuplicado = bancoClientesFalso.find(
-            (clienteSalvo, index) => {
-              // Verifica se o CPF bate E se NÃO é a própria pessoa que estamos editando
-              const cpfBate = clienteSalvo.cpf === cpfDigitado;
-              const eOutraPessoa = index.toString() !== indexEdicao.toString();
+          // Se estivermos editando, não barra se o CPF encontrado for do próprio cliente!
+          if (idEdicao !== "-1") {
+            queryBusca = queryBusca.neq("id", idEdicao);
+          }
 
-              return cpfBate && eOutraPessoa;
-            },
-          );
+          const { data: clienteExistente } = await queryBusca.single();
 
-          // Se achou alguém com esse CPF, barra tudo!
-          if (clienteDuplicado) {
+          if (clienteExistente) {
             abrirModalAviso(
-              `Este CPF já está cadastrado no sistema para o cliente:\n👤 ${clienteDuplicado.nome}`,
+              `Este CPF já pertence ao cliente:\n👤 ${clienteExistente.nome}`,
             );
-            document.getElementById("cad_cliente_cpf").focus(); // Devolve o cursor pro campo
-            return; // 🛑 PARA A EXECUÇÃO AQUI! Não salva e não fecha o modal.
+            document.getElementById("cad_cliente_cpf").focus();
+            return;
           }
         }
-        // =======================================================
 
-        // Força o nome a ficar maiúsculo antes de salvar e vincula os carros
-        dadosCliente.nome = (dadosCliente.nome || "").toUpperCase();
-        dadosCliente.veiculos = veiculosTemporarios || [];
+        btnSalvar.innerHTML = `<i class="ph ph-spinner ph-spin"></i> Salvando...`;
+        btnSalvar.disabled = true;
 
-        if (indexEdicao === "-1" || indexEdicao === "") {
-          // Se for -1, significa que clicamos em NOVO CLIENTE
-          bancoClientesFalso.push(dadosCliente);
+        let clienteIdFinal;
+
+        // 1. INSERE OU ATUALIZA NA TABELA 'clientes'
+        if (idEdicao === "-1") {
+          // INSERIR NOVO
+          const { data, error } = await supabaseClient
+            .from("clientes")
+            .insert([
+              {
+                nome,
+                cpf,
+                telefone,
+                cep,
+                endereco,
+                numero,
+                bairro,
+                cidade,
+                uf,
+              },
+            ])
+            .select();
+          if (error) throw error;
+          clienteIdFinal = data[0].id;
         } else {
-          // Se for 0, 1, 2... significa que clicamos no LÁPIS (Editar)
-          bancoClientesFalso[indexEdicao] = dadosCliente;
+          // ATUALIZAR EXISTENTE
+          const { data, error } = await supabaseClient
+            .from("clientes")
+            .update({
+              nome,
+              cpf,
+              telefone,
+              cep,
+              endereco,
+              numero,
+              bairro,
+              cidade,
+              uf,
+            })
+            .eq("id", idEdicao)
+            .select();
+          if (error) throw error;
+          clienteIdFinal = data[0].id;
+
+          // Se for edição, apaga os carros antigos dele nas nuvens para colocar a lista nova
+          await supabaseClient
+            .from("veiculos")
+            .delete()
+            .eq("cliente_id", clienteIdFinal);
         }
 
-        // 💾 Salva no navegador, atualiza o autocomplete e a tabela
-        salvarBancoClientes();
-        atualizarSugestoesClientes();
-        renderizarListaClientesCadastrados();
+        // 2. SALVA A LISTA NOVA DE VEÍCULOS
+        if (veiculosTemporarios && veiculosTemporarios.length > 0) {
+          const veiculosParaSalvar = veiculosTemporarios.map((v) => ({
+            cliente_id: clienteIdFinal,
+            placa: v.placa,
+            marca: v.marca,
+            modelo: v.modelo,
+            ano: v.ano,
+            cor: v.cor,
+            chassi: v.chassi,
+            combustivel: v.combustivel,
+          }));
 
-        // AVISA O USUÁRIO COM O NOVO MODAL!
-        abrirModalSucesso("Cliente salvo com sucesso!");
+          const { error: erroVeiculos } = await supabaseClient
+            .from("veiculos")
+            .insert(veiculosParaSalvar);
+          if (erroVeiculos) throw erroVeiculos;
+        }
 
-        // Limpa tudo pra voltar pra tela
+        abrirModalSucesso(
+          idEdicao === "-1"
+            ? "Cliente cadastrado!"
+            : "Dados do cliente atualizados!",
+        );
+
+        // Limpa e volta pra tela de lista
         this.reset();
-        document.getElementById("cad_cliente_index").value = "-1"; // Reseta o campo invisível
+        document.getElementById("cad_cliente_index").value = "-1";
         veiculosTemporarios = [];
         renderizarVeiculosCadastro();
-
-        // Finge o clique no botão voltar de forma segura
         document.getElementById("btn-voltar-lista").click();
       } catch (erro) {
-        console.error(erro);
-        alert("🚨 Opa! O JavaScript travou. O erro foi: " + erro.message);
+        console.error("Erro no Supabase:", erro);
+        alert("🚨 Ocorreu um erro ao salvar no banco de dados.");
+      } finally {
+        btnSalvar.innerHTML = textoOriginalBotao;
+        btnSalvar.disabled = false;
       }
     });
 
-  // ESCUTANDO O CAMPO DE NOME DO CHECKLIST PRINCIPAL
+  // ESCUTANDO O CAMPO DE NOME DO CHECKLIST PRINCIPAL (VIA SUPABASE)
   document
     .getElementById("cliente_nome")
-    .addEventListener("input", function () {
-      const nomeDigitado = this.value.toUpperCase(); // Força maiúsculo pra evitar erro de busca
-      this.value = nomeDigitado; // Mantém a caixa de texto em maiúsculo
+    .addEventListener("input", async function () {
+      // 👈 Virou 'async'
+      const nomeDigitado = this.value.toUpperCase();
+      this.value = nomeDigitado;
 
-      atualizarSugestoesClientes(nomeDigitado);
+      if (nomeDigitado.length >= 3) {
+        atualizarSugestoesClientes(nomeDigitado);
+      }
 
-      // Procura no nosso "banco" se esse cliente existe
-      const clienteEncontrado = bancoClientesFalso.find(
-        (c) => c.nome.toUpperCase() === nomeDigitado,
-      );
+      // Procura no banco nas NUVENS se esse cliente exato existe
+      if (nomeDigitado.length > 3) {
+        try {
+          const { data: clienteEncontrado, error } = await supabaseClient
+            .from("clientes")
+            .select("*, veiculos(*)")
+            .eq("nome", nomeDigitado)
+            .single(); // Tenta pegar 1 cliente exato
 
-      if (clienteEncontrado) {
-        // Puxa as informações como um passe de mágica
-        document.getElementById("cliente_cpf").value =
-          clienteEncontrado.cpf || "";
-        document.getElementById("cliente_telefone").value =
-          clienteEncontrado.telefone || "";
-        document.getElementById("cliente_cep").value =
-          clienteEncontrado.cep || "";
-        document.getElementById("cliente_endereco").value =
-          clienteEncontrado.endereco || "";
-        document.getElementById("cliente_numero").value =
-          clienteEncontrado.numero || "";
-        document.getElementById("cliente_bairro").value =
-          clienteEncontrado.bairro || "";
-        document.getElementById("cliente_cidade").value =
-          clienteEncontrado.cidade || "";
-        const campoUfPrincipal = document.getElementById("cliente_uf");
-        if (campoUfPrincipal)
-          campoUfPrincipal.value = clienteEncontrado.uf || "";
+          if (clienteEncontrado) {
+            // Puxa as informações como um passe de mágica
+            document.getElementById("cliente_cpf").value =
+              clienteEncontrado.cpf || "";
+            document.getElementById("cliente_telefone").value =
+              clienteEncontrado.telefone || "";
+            document.getElementById("cliente_cep").value =
+              clienteEncontrado.cep || "";
+            document.getElementById("cliente_endereco").value =
+              clienteEncontrado.endereco || "";
+            document.getElementById("cliente_numero").value =
+              clienteEncontrado.numero || "";
+            document.getElementById("cliente_bairro").value =
+              clienteEncontrado.bairro || "";
+            document.getElementById("cliente_cidade").value =
+              clienteEncontrado.cidade || "";
+            const campoUfPrincipal = document.getElementById("cliente_uf");
+            if (campoUfPrincipal)
+              campoUfPrincipal.value = clienteEncontrado.uf || "";
 
-        // E os veículos?
-        const veiculos = clienteEncontrado.veiculos;
-        if (veiculos && veiculos.length === 1) {
-          // Se só tem um carro, já joga na tela sem perguntar
-          preencherVeiculoChecklist(veiculos[0]);
-        } else if (veiculos && veiculos.length > 1) {
-          // Se tem mais de um, abre o modal de escolha!
-          abrirSelecaoVeiculos(veiculos);
+            // E os veículos?
+            const veiculos = clienteEncontrado.veiculos;
+            if (veiculos && veiculos.length === 1) {
+              preencherVeiculoChecklist(veiculos[0]);
+            } else if (veiculos && veiculos.length > 1) {
+              abrirSelecaoVeiculos(veiculos);
+            }
+          }
+        } catch (erro) {
+          // Se não achou ninguém com o nome exato ainda, ignora silenciosamente
         }
       }
     });
@@ -1145,11 +1318,18 @@ function abrirModalGestaoClientes() {
 }
 
 function fecharModalGestaoClientes() {
+  // 1. Esconde o modal principal da tela
   document.getElementById("modal-gestao-clientes").classList.add("hidden");
-  // Limpa o formulário e a lista quando fecha, para não sujar o próximo cadastro
+
+  // 2. Limpa o formulário e a lista de veículos para não sujar o próximo cadastro
   document.getElementById("form-cadastro-cliente").reset();
+  document.getElementById("cad_cliente_index").value = "-1"; // Reseta o modo de edição
   veiculosTemporarios = [];
   renderizarVeiculosCadastro();
+
+  // 3. A MÁGICA AQUI: Força as telas internas a voltarem para o padrão (Lista visível, Cadastro oculto)
+  document.getElementById("view-lista-clientes").classList.remove("hidden");
+  document.getElementById("form-cadastro-cliente").classList.add("hidden");
 }
 
 function adicionarVeiculoLista() {
@@ -1259,100 +1439,145 @@ function salvarBancoClientes() {
 carregarBancoClientes();
 
 // 4. Sua função blindada de desenhar a tabela (mantida intacta)
-// Substitua a sua função renderizarLista por esta (que agora tem os 2 botões)
-function renderizarListaClientesCadastrados() {
+// 4. Desenha a tabela lendo direto do Supabase
+async function renderizarListaClientesCadastrados() {
   const tbody = document.getElementById("tbody-lista-clientes");
   const termo = document
     .getElementById("busca-lista-clientes")
-    .value.toUpperCase();
-  tbody.innerHTML = "";
+    .value.trim()
+    .toUpperCase();
 
-  const filtrados = bancoClientesFalso.filter((c) => {
-    const nomeSeguro = (c.nome || "SEM NOME").toUpperCase();
-    return nomeSeguro.includes(termo);
-  });
+  // Mostra que está carregando...
+  tbody.innerHTML = `<tr><td colspan="4" style="text-align: center;"><i class="ph ph-spinner ph-spin"></i> Buscando nas nuvens...</td></tr>`;
 
-  if (filtrados.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum cliente encontrado.</td></tr>`;
-    return;
+  try {
+    // Busca clientes e seus veículos na mesma requisição (Relacional)
+    let query = supabaseClient
+      .from("clientes")
+      .select("*, veiculos(*)")
+      .order("nome", { ascending: true });
+
+    // Se o usuário digitou algo na busca, filtra no banco
+    if (termo) {
+      query = query.ilike("nome", `%${termo}%`);
+    }
+
+    const { data: clientes, error } = await query;
+
+    if (error) throw error;
+
+    tbody.innerHTML = "";
+
+    if (!clientes || clientes.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum cliente encontrado.</td></tr>`;
+      return;
+    }
+
+    clientes.forEach((cliente) => {
+      const qtdVeiculos = cliente.veiculos ? cliente.veiculos.length : 0;
+      const nomeExibicao = (cliente.nome || "SEM NOME").toUpperCase();
+
+      // Agora usamos o ID real do banco (ex: 1, 2, 3...)
+      const idCliente = cliente.id;
+
+      tbody.innerHTML += `
+        <tr>
+          <td><strong>${nomeExibicao}</strong></td>
+          <td>${cliente.telefone || "-"}</td>
+          <td><span class="badge">${qtdVeiculos} carro(s)</span></td>
+          <td style="text-align: right; white-space: nowrap;">
+            <button type="button" class="icon-btn" style="display:inline-flex; padding: 6px; border:none; margin-right: 5px;" title="Editar" onclick="editarCliente(${idCliente})">
+              <i class="ph ph-pencil-simple" style="font-size: 1.2rem; color: var(--primary);"></i>
+            </button>
+            <button type="button" class="icon-btn btn-danger" style="display:inline-flex; padding: 6px; border:none;" title="Excluir" onclick="excluirCliente(${idCliente})">
+              <i class="ph ph-trash" style="font-size: 1.2rem;"></i>
+            </button>
+          </td>
+        </tr>`;
+    });
+  } catch (erro) {
+    console.error("Erro ao buscar clientes:", erro);
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ef4444;">Erro ao carregar dados do servidor.</td></tr>`;
   }
+}
+// 👇 NOVAS FUNÇÕES COMUNICANDO COM O SUPABASE 👇
 
-  filtrados.forEach((cliente) => {
-    const qtdVeiculos = cliente.veiculos ? cliente.veiculos.length : 0;
-    const nomeExibicao = (cliente.nome || "SEM NOME").toUpperCase();
+async function editarCliente(id) {
+  try {
+    // Busca o cliente específico e seus carros pelo ID
+    const { data: cliente, error } = await supabaseClient
+      .from("clientes")
+      .select("*, veiculos(*)")
+      .eq("id", id)
+      .single();
 
-    // 👇 Pega a posição real do cliente no banco para podermos editar/excluir o cara certo!
-    const indexOriginal = bancoClientesFalso.indexOf(cliente);
+    if (error) throw error;
 
-    tbody.innerHTML += `
-      <tr>
-        <td><strong>${nomeExibicao}</strong></td>
-        <td>${cliente.telefone || "-"}</td>
-        <td><span class="badge">${qtdVeiculos} carro(s)</span></td>
-        <td style="text-align: right; white-space: nowrap;">
-          <button type="button" class="icon-btn" style="display:inline-flex; padding: 6px; border:none; margin-right: 5px;" title="Editar" onclick="editarCliente(${indexOriginal})">
-            <i class="ph ph-pencil-simple" style="font-size: 1.2rem; color: var(--primary);"></i>
-          </button>
-          <button type="button" class="icon-btn btn-danger" style="display:inline-flex; padding: 6px; border:none;" title="Excluir" onclick="excluirCliente(${indexOriginal})">
-            <i class="ph ph-trash" style="font-size: 1.2rem;"></i>
-          </button>
-        </td>
-      </tr>`;
-  });
+    // 1. Diz pro formulário invisível: "Estamos editando a pessoa com ID X"
+    document.getElementById("cad_cliente_index").value = cliente.id;
+
+    // 2. Preenche todas as caixinhas de texto
+    document.getElementById("cad_cliente_nome").value = cliente.nome || "";
+    document.getElementById("cad_cliente_cpf").value = cliente.cpf || "";
+    document.getElementById("cad_cliente_telefone").value =
+      cliente.telefone || "";
+    document.getElementById("cad_cliente_cep").value = cliente.cep || "";
+    document.getElementById("cad_cliente_endereco").value =
+      cliente.endereco || "";
+    document.getElementById("cad_cliente_numero").value = cliente.numero || "";
+    document.getElementById("cad_cliente_bairro").value = cliente.bairro || "";
+    document.getElementById("cad_cliente_cidade").value = cliente.cidade || "";
+    document.getElementById("cad_cliente_uf").value = cliente.uf || "";
+
+    // 3. Puxa os carros dele de volta pra tabela temporária
+    veiculosTemporarios = cliente.veiculos ? [...cliente.veiculos] : [];
+    renderizarVeiculosCadastro();
+
+    // 4. Muda da tela de lista para a tela de formulário
+    document.getElementById("view-lista-clientes").classList.add("hidden");
+    document.getElementById("form-cadastro-cliente").classList.remove("hidden");
+  } catch (erro) {
+    console.error("Erro ao buscar para edição:", erro);
+    alert("Erro ao puxar dados do cliente.");
+  }
 }
 
-// 👇 ADICIONE ESTAS DUAS FUNÇÕES NOVAS LOGO ABAIXO 👇
-function editarCliente(index) {
-  const cliente = bancoClientesFalso[index];
+// Variável para lembrar qual ID vamos apagar
+let clienteIdParaExcluir = -1;
 
-  // 1. Diz pro formulário invisível: "Estamos editando a pessoa da posição X"
-  document.getElementById("cad_cliente_index").value = index;
-
-  // 2. Preenche todas as caixinhas de texto com os dados do cara
-  document.getElementById("cad_cliente_nome").value = cliente.nome || "";
-  document.getElementById("cad_cliente_cpf").value = cliente.cpf || "";
-  document.getElementById("cad_cliente_telefone").value =
-    cliente.telefone || "";
-  document.getElementById("cad_cliente_cep").value = cliente.cep || "";
-  document.getElementById("cad_cliente_endereco").value =
-    cliente.endereco || "";
-  document.getElementById("cad_cliente_numero").value = cliente.numero || "";
-  document.getElementById("cad_cliente_bairro").value = cliente.bairro || "";
-  document.getElementById("cad_cliente_cidade").value = cliente.cidade || "";
-  document.getElementById("cad_cliente_uf").value = cliente.uf || "";
-
-  // 3. Puxa os carros dele de volta pra tabela temporária
-  veiculosTemporarios = cliente.veiculos ? [...cliente.veiculos] : [];
-  renderizarVeiculosCadastro();
-
-  // 4. Muda da tela de lista para a tela de formulário
-  document.getElementById("view-lista-clientes").classList.add("hidden");
-  document.getElementById("form-cadastro-cliente").classList.remove("hidden");
-}
-
-// Variável para o sistema lembrar em quem você clicou na lixeira
-let clienteIndexParaExcluir = -1;
-
-function excluirCliente(index) {
-  clienteIndexParaExcluir = index; // Guarda a posição do cliente
+function excluirCliente(id) {
+  clienteIdParaExcluir = id;
   document
     .getElementById("modal-confirmacao-excluir")
-    .classList.remove("hidden"); // Abre o modal bonito
+    .classList.remove("hidden");
 }
 
 function fecharModalExcluir() {
   document.getElementById("modal-confirmacao-excluir").classList.add("hidden");
-  clienteIndexParaExcluir = -1; // Limpa a memória
+  clienteIdParaExcluir = -1;
 }
 
-function confirmarExclusao() {
-  if (clienteIndexParaExcluir > -1) {
-    bancoClientesFalso.splice(clienteIndexParaExcluir, 1); // Remove da lista
-    salvarBancoClientes(); // Salva a lista nova no navegador
-    atualizarSugestoesClientes(); // Tira o cara do AutoComplete do checklist
-    renderizarListaClientesCadastrados(); // Redesenha a tabela
+async function confirmarExclusao() {
+  // 👈 Virou async para esperar a internet!
+  if (clienteIdParaExcluir !== -1) {
+    try {
+      // MÁGICA: Manda o Supabase deletar!
+      // (Como configuramos a regra 'cascade' no SQL, ele vai apagar os carros do cliente sozinho também!)
+      const { error } = await supabaseClient
+        .from("clientes")
+        .delete()
+        .eq("id", clienteIdParaExcluir);
 
-    fecharModalExcluir(); // Fecha a pergunta
-    abrirModalSucesso("Cliente excluído com sucesso!"); // Mostra nosso modal verde!
+      if (error) throw error;
+
+      // Limpa a tela e avisa o sucesso
+      renderizarListaClientesCadastrados();
+      atualizarSugestoesClientes();
+      fecharModalExcluir();
+      abrirModalSucesso("Cliente excluído com sucesso do banco de dados!");
+    } catch (erro) {
+      console.error("Erro ao excluir:", erro);
+      alert("Erro ao excluir o cliente das nuvens.");
+    }
   }
 }
