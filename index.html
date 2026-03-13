@@ -1345,14 +1345,27 @@
         >
           Operação realizada com sucesso.
         </p>
-        <button
-          type="button"
-          class="btn btn-primary"
-          id="btn-fechar-sucesso"
-          style="width: 100%; justify-content: center"
+        <div
+          class="modal-buttons"
+          style="
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+          "
         >
-          OK, Entendi
-        </button>
+          <button id="btn-fechar-sucesso" class="btn btn-secondary">
+            OK, Entendi
+          </button>
+
+          <button
+            id="btn-imprimir-sucesso"
+            class="btn btn-primary"
+            style="display: none"
+          >
+            <i class="ph ph-printer"></i> Imprimir OS
+          </button>
+        </div>
       </div>
     </div>
 

@@ -302,15 +302,41 @@ function alternarTema() {
   }
 }
 
-function abrirModalSucesso(mensagem) {
-  // Troca o texto do modal pelo texto que a gente quiser na hora!
+// Memória do sistema para saber o que imprimir
+let ultimoChecklistSalvo = null;
+
+function abrirModalSucesso(mensagem, mostrarBotaoImprimir = false) {
   document.getElementById("texto-modal-sucesso").innerText = mensagem;
   document.getElementById("modal-sucesso").classList.remove("hidden");
+
+  // Controla se o botão de imprimir aparece ou não
+  const btnImprimir = document.getElementById("btn-imprimir-sucesso");
+  if (btnImprimir) {
+    btnImprimir.style.display = mostrarBotaoImprimir ? "inline-flex" : "none";
+  }
 }
 
 function fecharModalSucesso() {
   document.getElementById("modal-sucesso").classList.add("hidden");
 }
+
+// Ação do novo botão de Imprimir dentro do Modal de Sucesso
+document
+  .getElementById("btn-imprimir-sucesso")
+  .addEventListener("click", () => {
+    if (ultimoChecklistSalvo) {
+      // Puxa o nível de combustível da tela (ou vazio se não achar)
+      const nivelCombustivel = document.getElementById("nivel_combustivel")
+        ? document.getElementById("nivel_combustivel").value
+        : "VAZIO";
+
+      // Manda pra fábrica de PDFs!
+      gerarPDFImpressao(ultimoChecklistSalvo, nivelCombustivel);
+
+      // (Opcional) Fecha o modal de sucesso depois que abrir a impressão
+      fecharModalSucesso();
+    }
+  });
 
 function abrirModalAviso(mensagem) {
   document.getElementById("texto-modal-aviso").innerText = mensagem;
@@ -1322,7 +1348,7 @@ formChecklist.addEventListener("submit", async function (evento) {
     renderizarTabelaClientes();
 
     // 6. Mostra a nossa mensagem de sucesso bonitona
-    abrirModalSucesso("Checklist salvo com sucesso nas nuvens!");
+    abrirModalSucesso("Checklist salvo com sucesso nas nuvens!", true);
 
     // 7. Limpa o formulário para o próximo carro
     formChecklist.reset();
