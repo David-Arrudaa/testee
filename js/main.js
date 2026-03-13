@@ -1271,30 +1271,60 @@ window.onload = function () {
 };
 
 // ==========================================
-// 9. CAPTURA E SALVAMENTO DO CHECKLIST
+// 9. CAPTURA E SALVAMENTO DO CHECKLIST (AGORA NAS NUVENS ☁️)
 // ==========================================
+
+// Função que envia o pacote de dados para o Supabase
+async function salvarChecklistNaNuvem(dados) {
+  const { data, error } = await supabaseClient
+    .from("historico_checklists")
+    .insert([
+      {
+        placa_veiculo: dados.veiculo_placa || "SEM PLACA",
+        cliente_nome: dados.cliente_nome || "NÃO INFORMADO",
+        dados_checklist: dados, // Salva o formulário inteiro de uma vez aqui!
+        observacoes: dados.servico_solicitado || "",
+        mecanico_responsavel: dados.mecanico_responsavel || "NÃO INFORMADO",
+      },
+    ]);
+
+  if (error) throw error;
+  console.log("Sucesso! Checklist salvo nas nuvens!");
+}
+
 const formChecklist = document.getElementById("form-checklist");
 
-formChecklist.addEventListener("submit", function (evento) {
+// Transformamos o botão em 'async' para poder esperar o Supabase responder
+formChecklist.addEventListener("submit", async function (evento) {
   evento.preventDefault();
 
+  // Pega o botão para fazer o efeito de "carregando"
+  const btnSalvar = document.getElementById("btn-salvar-entrada");
+  const textoOriginalBotao = btnSalvar.innerHTML;
+
   try {
-    // 1. O FormData passa em todos os inputs e empacota os valores automaticamente
+    // 1. Muda o botão para mostrar que está pensando
+    btnSalvar.innerHTML = `<i class="ph ph-spinner ph-spin"></i> Salvando nas Nuvens...`;
+    btnSalvar.disabled = true;
+
+    // 2. Empacota todos os valores do formulário
     const formData = new FormData(formChecklist);
     const dadosDoChecklist = Object.fromEntries(formData.entries());
 
-    // 2. Salva no nosso "Banco de Checklists" da memória do navegador
-    bancoChecklists.push(dadosDoChecklist);
-    salvarBancoChecklists(); // 💾 Grava no LocalStorage!
+    // 🌟 3. A MÁGICA: Manda para o banco de dados do Supabase! 🌟
+    await salvarChecklistNaNuvem(dadosDoChecklist);
 
-    // 3. Atualiza a tabela do reloginho (Histórico) com a nova entrada
+    // 4. Mantemos o salvamento local como "Backup" e para a tabela do modal funcionar rápido
+    bancoChecklists.push(dadosDoChecklist);
+    salvarBancoChecklists();
+
+    // 5. Atualiza a tabela do reloginho (Histórico) com a nova entrada
     renderizarTabelaClientes();
 
-    // 4. Mostra a nossa mensagem de sucesso bonitona
-    abrirModalSucesso("Checklist de Entrada salvo com sucesso!");
+    // 6. Mostra a nossa mensagem de sucesso bonitona
+    abrirModalSucesso("Checklist salvo com sucesso nas nuvens!");
 
-    // 5. Limpa o formulário e os visuais (como o ponteiro de combustível)
-    // para o próximo carro!
+    // 7. Limpa o formulário para o próximo carro
     formChecklist.reset();
 
     // Volta o ponteiro de combustível pro VAZIO visualmente
@@ -1304,10 +1334,13 @@ formChecklist.addEventListener("submit", function (evento) {
     }
   } catch (erro) {
     console.error(erro);
-    alert("🚨 Erro ao salvar o checklist: " + erro.message);
+    alert("🚨 Erro ao salvar o checklist nas nuvens. Verifique o Console.");
+  } finally {
+    // 8. Devolve o botão ao normal, dando sucesso ou erro
+    btnSalvar.innerHTML = textoOriginalBotao;
+    btnSalvar.disabled = false;
   }
 });
-
 // ==========================================
 // 10. GESTÃO DE CLIENTES (Modal e Veículos)
 // ==========================================
