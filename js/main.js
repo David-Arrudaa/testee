@@ -354,11 +354,40 @@ let bancoChecklists = [];
 let paginaAtualClientes = 1;
 const clientesPorPagina = 20;
 
-// 1. Puxa os checklists salvos no navegador
-function carregarBancoChecklists() {
-  const dadosSalvos = localStorage.getItem("autocar_checklists");
-  if (dadosSalvos) {
-    bancoChecklists = JSON.parse(dadosSalvos);
+// 1. Puxa os checklists DIRETAMENTE DAS NUVENS (Supabase)
+async function carregarBancoChecklists() {
+  try {
+    // Tenta puxar tudo lá da tabela que você criou
+    const { data, error } = await supabaseClient
+      .from("historico_checklists")
+      .select("dados_checklist")
+      .order("created_at", { ascending: false }); // Puxa os mais novos primeiro!
+
+    if (error) throw error;
+
+    bancoChecklists = []; // Zera a lista do sistema
+
+    // Se achou dados nas nuvens, desempacota e joga no sistema
+    if (data && data.length > 0) {
+      data.forEach((linha) => {
+        // Pega só o pacote JSON que salvamos e joga na lista da tela
+        bancoChecklists.push(linha.dados_checklist);
+      });
+    }
+
+    // Manda desenhar a tabela do modal agora que os dados chegaram!
+    renderizarTabelaClientes();
+    console.log("Histórico baixado das nuvens com sucesso!");
+  } catch (erro) {
+    console.error("Erro ao puxar o histórico da nuvem:", erro);
+
+    // SISTEMA BLINDADO: Se o computador estiver sem internet na hora de abrir,
+    // ele tenta puxar o backup local que nós deixamos salvo!
+    const dadosSalvos = localStorage.getItem("autocar_checklists");
+    if (dadosSalvos) {
+      bancoChecklists = JSON.parse(dadosSalvos);
+      renderizarTabelaClientes();
+    }
   }
 }
 
