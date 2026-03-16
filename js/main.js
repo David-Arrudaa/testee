@@ -106,6 +106,20 @@ function confirmarLimpeza() {
   preencherDataHoraAtual();
   verificarLuzPainel();
 
+  // 👇 🌟 MÁGICA NOVA: LIMPANDO A ASSINATURA DA TELA 🌟 👇
+  if (canvas) {
+    canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+  }
+  document.getElementById("assinatura_base64").value = "";
+
+  const previewImg = document.getElementById("preview-assinatura-img");
+  if (previewImg) previewImg.src = "";
+
+  document.getElementById("preview-assinatura-container").style.display =
+    "none";
+  document.getElementById("btn-abrir-assinatura").style.display = "flex";
+  // 👆 ======================================================= 👆
+
   fecharModalLimpar();
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
@@ -121,17 +135,30 @@ function gerarPDFImpressao(dados, nivelCombustivel) {
   if (dados.diagnostico === "POPULAR") valorDiagnostico = "R$ 250,00";
   if (dados.diagnostico === "PREMIUM") valorDiagnostico = "R$ 350,00";
 
+  // Lógica para montar a assinatura no PDF
+  let imgAssinatura = "";
+  if (dados.assinatura_cliente && dados.assinatura_cliente.trim() !== "") {
+    // Se tiver assinatura salva, coloca a imagem por cima da linha
+    imgAssinatura = `<img src="${dados.assinatura_cliente}" style="max-height: 60px; display: block; margin: -40px auto 0 auto;">`;
+  }
+
   let assinaturasHtml = "";
   if (dados.guincho === "SIM") {
     assinaturasHtml = `
-      <div style="width: 30%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Cliente</div>
+      <div style="width: 30%; border-top: 1px solid #000; padding-top: 5px; position: relative;">
+        ${imgAssinatura}
+        Assinatura do Cliente
+      </div>
       <div style="width: 30%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Responsável</div>
       <div style="width: 30%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Guincho</div>
     `;
   } else {
     assinaturasHtml = `
-      <div style="width: 40%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Cliente</div>
-      <div style="width: 40%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Responsável Técnico</div>
+      <div style="width: 40%; border-top: 1px solid #000; padding-top: 5px; position: relative; margin-top: 40px;">
+        ${imgAssinatura}
+        Assinatura do Cliente
+      </div>
+      <div style="width: 40%; border-top: 1px solid #000; padding-top: 5px; margin-top: 40px;">Assinatura do Responsável Técnico</div>
     `;
   }
 
@@ -169,7 +196,7 @@ function gerarPDFImpressao(dados, nivelCombustivel) {
       </head>
       <body>
         <div class="header">
-          <img src="${logoUrl}" style="height: 65px;" alt="Logo Autocar" />
+          <img src="${logoUrl}" style="width: 200px; height: 65px; object-fit: contain;" alt="Logo Autocar" />
           <div class="header-title">CHECKLIST DE ENTRADA</div>
         </div>
 
@@ -252,7 +279,7 @@ function gerarPDFImpressao(dados, nivelCombustivel) {
   setTimeout(() => {
     win.focus();
     win.print();
-  }, 800);
+  }, 2500);
 }
 
 // 2. Botão de Imprimir da Tela Principal (Lê a tela e manda pra Fábrica)
@@ -352,37 +379,36 @@ function fecharModalAviso() {
 // ==========================================
 let bancoChecklists = [];
 let paginaAtualClientes = 1;
-const clientesPorPagina = 20;
+const clientesPorPagina = 10;
 
+// 1. Puxa os checklists DIRETAMENTE DAS NUVENS (Supabase)
 // 1. Puxa os checklists DIRETAMENTE DAS NUVENS (Supabase)
 async function carregarBancoChecklists() {
   try {
-    // Tenta puxar tudo lá da tabela que você criou
+    // 👇 ADICIONAMOS O 'id' AQUI NO SELECT 👇
     const { data, error } = await supabaseClient
       .from("historico_checklists")
-      .select("dados_checklist")
-      .order("created_at", { ascending: false }); // Puxa os mais novos primeiro!
+      .select("id, dados_checklist")
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    bancoChecklists = []; // Zera a lista do sistema
+    bancoChecklists = [];
 
-    // Se achou dados nas nuvens, desempacota e joga no sistema
     if (data && data.length > 0) {
       data.forEach((linha) => {
-        // Pega só o pacote JSON que salvamos e joga na lista da tela
-        bancoChecklists.push(linha.dados_checklist);
+        // Pegamos o pacote e "colamos" o ID da nuvem nele
+        let pacote = linha.dados_checklist;
+        pacote.id_nuvem = linha.id; // 👈 MÁGICA: Guarda o ID verdadeiro!
+
+        bancoChecklists.push(pacote);
       });
     }
 
-    // Manda desenhar a tabela do modal agora que os dados chegaram!
     renderizarTabelaClientes();
     console.log("Histórico baixado das nuvens com sucesso!");
   } catch (erro) {
     console.error("Erro ao puxar o histórico da nuvem:", erro);
-
-    // SISTEMA BLINDADO: Se o computador estiver sem internet na hora de abrir,
-    // ele tenta puxar o backup local que nós deixamos salvo!
     const dadosSalvos = localStorage.getItem("autocar_checklists");
     if (dadosSalvos) {
       bancoChecklists = JSON.parse(dadosSalvos);
@@ -410,16 +436,27 @@ function renderizarTabelaClientes() {
   const infoPagina = document.getElementById("info-pagina");
 
   const agrupados = {};
-  bancoChecklists.forEach((chk) => {
+
+  // Agrupa os checklists por cliente, lembrando quem veio primeiro (o mais novo)
+  bancoChecklists.forEach((chk, index) => {
     const nome = (chk.cliente_nome || "SEM NOME").toUpperCase();
     if (!agrupados[nome]) {
-      agrupados[nome] = { nome: nome, qtd: 0, ultima: chk.data_entrada };
+      agrupados[nome] = {
+        nome: nome,
+        qtd: 0,
+        ultima: chk.data_entrada,
+        horario: chk.horario_entrada,
+        ordem_chegada: index, // 👈 MÁGICA 2: Salva a posição exata de quem é o mais novo!
+      };
     }
     agrupados[nome].qtd++;
-    agrupados[nome].ultima = chk.data_entrada || agrupados[nome].ultima;
   });
 
   let listaAgrupada = Object.values(agrupados);
+
+  // 🌟 A REGRA DE OURO: Ordena a lista para o mais recente ficar sempre no topo!
+  listaAgrupada.sort((a, b) => a.ordem_chegada - b.ordem_chegada);
+
   let clientesFiltrados = listaAgrupada.filter((cliente) =>
     cliente.nome.includes(termoBusca),
   );
@@ -441,11 +478,12 @@ function renderizarTabelaClientes() {
     infoPagina.innerText = `Página 0 de 0`;
   } else {
     clientesDaPagina.forEach((cliente) => {
+      // Deixei o visual da data/hora mais limpo para você ver exatamente quando ele entrou
       tbody.innerHTML += `
         <tr>
           <td><strong>${cliente.nome}</strong></td>
-          <td>${cliente.qtd}</td>
-          <td>${cliente.ultima}</td>
+          <td><span class="badge" style="background: var(--bg-body); color: var(--text-primary); border: 1px solid #444;">${cliente.qtd} entrada(s)</span></td>
+          <td>${cliente.ultima} ${cliente.horario ? "às " + cliente.horario : ""}</td>
           <td style="text-align: right">
             <button class="icon-btn" style="display:inline-flex; padding: 6px; border:none;" title="Ver Checklists" onclick="abrirDetalhesCliente('${cliente.nome}')">
               <i class="ph ph-list-bullets" style="font-size: 1.2rem; color: var(--primary);"></i>
@@ -531,33 +569,72 @@ function fecharModalExcluirChecklist() {
   nomeClienteChecklistParaExcluir = "";
 }
 
-function confirmarExclusaoChecklist() {
+async function confirmarExclusaoChecklist() {
   if (checklistIndexParaExcluir > -1) {
-    // 1. Remove da memória
-    bancoChecklists.splice(checklistIndexParaExcluir, 1);
+    try {
+      // Muda o botão para mostrar que está apagando
+      const btnConfirmar = document.getElementById(
+        "btn-confirmar-excluir-checklist",
+      );
+      const textoOriginal = btnConfirmar.innerHTML;
+      btnConfirmar.innerHTML = `<i class="ph ph-spinner ph-spin"></i> Excluindo...`;
+      btnConfirmar.disabled = true;
 
-    // 2. Salva no navegador e atualiza a tabela geral
-    salvarBancoChecklists();
-    renderizarTabelaClientes();
+      // 1. Descobre qual é o ID verdadeiro desse checklist lá na nuvem
+      const checklistAlvo = bancoChecklists[checklistIndexParaExcluir];
+      const idNaNuvem = checklistAlvo.id_nuvem;
 
-    // 3. Verifica se o cliente ainda tem outro checklist salvo
-    const aindaTemChecklist = bancoChecklists.some(
-      (chk) =>
-        (chk.cliente_nome || "SEM NOME").toUpperCase() ===
-        nomeClienteChecklistParaExcluir,
-    );
+      // 2. Se ele tem ID na nuvem, manda o Supabase DELETAR DE VERDADE!
+      if (idNaNuvem) {
+        const { error } = await supabaseClient
+          .from("historico_checklists")
+          .delete()
+          .eq("id", idNaNuvem);
 
-    if (aindaTemChecklist) {
-      abrirDetalhesCliente(nomeClienteChecklistParaExcluir);
-    } else {
-      fecharDetalhesCliente();
+        if (error) throw error;
+      }
+
+      // 3. Remove da memória da tela (limpa do visual)
+      bancoChecklists.splice(checklistIndexParaExcluir, 1);
+      salvarBancoChecklists();
+      renderizarTabelaClientes();
+
+      // 4. Verifica se o cliente ainda tem outro checklist salvo
+      const aindaTemChecklist = bancoChecklists.some(
+        (chk) =>
+          (chk.cliente_nome || "SEM NOME").toUpperCase() ===
+          nomeClienteChecklistParaExcluir,
+      );
+
+      if (aindaTemChecklist) {
+        abrirDetalhesCliente(nomeClienteChecklistParaExcluir);
+      } else {
+        fecharDetalhesCliente();
+      }
+
+      // 5. Fecha a pergunta e mostra o sucesso!
+      fecharModalExcluirChecklist();
+      abrirModalSucesso("Checklist excluído definitivamente das Nuvens!");
+
+      // Volta o botão ao normal
+      btnConfirmar.innerHTML = textoOriginal;
+      btnConfirmar.disabled = false;
+    } catch (erro) {
+      console.error("Erro ao excluir das nuvens:", erro);
+      alert(
+        "🚨 Erro ao excluir o checklist. Verifique sua conexão com a internet.",
+      );
+
+      // Em caso de erro, solta o botão
+      const btnConfirmar = document.getElementById(
+        "btn-confirmar-excluir-checklist",
+      );
+      btnConfirmar.innerHTML = "Sim, Excluir";
+      btnConfirmar.disabled = false;
     }
-
-    // 4. Fecha a pergunta e mostra a mensagem de sucesso!
-    fecharModalExcluirChecklist();
-    abrirModalSucesso("Checklist excluído com sucesso!");
   }
 }
+
 // A MÁGICA DE PREENCHER TUDO DE NOVO
 function carregarChecklistNaTela(index) {
   const chk = bancoChecklists[index];
@@ -587,6 +664,29 @@ function carregarChecklistNaTela(index) {
     });
   });
 
+  // 👇 🌟 RECUPERANDO A ASSINATURA DA NUVEM PARA A TELA 🌟 👇
+  const inputBase64 = document.getElementById("assinatura_base64");
+  const previewContainer = document.getElementById(
+    "preview-assinatura-container",
+  );
+  const previewImg = document.getElementById("preview-assinatura-img");
+  const btnAbrirAssinatura = document.getElementById("btn-abrir-assinatura");
+
+  if (chk.assinatura_cliente && chk.assinatura_cliente.trim() !== "") {
+    // Se tem assinatura salva, coloca no formulário invisível e mostra a imagem!
+    if (inputBase64) inputBase64.value = chk.assinatura_cliente;
+    if (previewImg) previewImg.src = chk.assinatura_cliente;
+    if (previewContainer) previewContainer.style.display = "block";
+    if (btnAbrirAssinatura) btnAbrirAssinatura.style.display = "none";
+  } else {
+    // Se for um checklist bem antigo que não tinha assinatura ainda, limpa tudo
+    if (inputBase64) inputBase64.value = "";
+    if (previewImg) previewImg.src = "";
+    if (previewContainer) previewContainer.style.display = "none";
+    if (btnAbrirAssinatura) btnAbrirAssinatura.style.display = "flex";
+  }
+  // 👆 ======================================================= 👆
+
   // 4. Arruma o ponteiro visual de Combustível
   const nivelTexto = chk.nivel_combustivel;
   const indiceCombustivel = MAPA_COMBUSTIVEL.findIndex(
@@ -594,7 +694,9 @@ function carregarChecklistNaTela(index) {
   );
   if (indiceCombustivel !== -1) {
     document.getElementById("fuel-slider").value = indiceCombustivel;
-    atualizarMarcadorCombustivel(indiceCombustivel);
+    if (typeof atualizarMarcadorCombustivel === "function") {
+      atualizarMarcadorCombustivel(indiceCombustivel);
+    }
   }
 
   // 5. Muda o Visual do Topo (Mostra que estamos visualizando algo antigo)
@@ -1298,6 +1400,15 @@ window.onload = function () {
       // 1. Limpa todos os campos do formulário de uma vez
       document.getElementById("form-checklist").reset();
 
+      // 👇 🌟 COLE O CÓDIGO DO CANVAS AQUI 🌟 👇
+      if (canvas) {
+        canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+        document.getElementById("assinatura_base64").value = "";
+        // Esconde a foto da assinatura velha e volta o botão de assinar
+        document.getElementById("preview-assinatura-container").style.display =
+          "none";
+        document.getElementById("btn-abrir-assinatura").style.display = "flex";
+      }
       // 2. Zera o ponteiro de combustível
       if (typeof atualizarMarcadorCombustivel === "function") {
         document.getElementById("fuel-slider").value = 0;
@@ -1376,11 +1487,25 @@ formChecklist.addEventListener("submit", async function (evento) {
     // 5. Atualiza a tabela do reloginho (Histórico) com a nova entrada
     renderizarTabelaClientes();
 
+    ultimoChecklistSalvo = dadosDoChecklist;
+
     // 6. Mostra a nossa mensagem de sucesso bonitona
     abrirModalSucesso("Checklist salvo com sucesso nas nuvens!", true);
 
     // 7. Limpa o formulário para o próximo carro
     formChecklist.reset();
+
+    if (canvas) {
+      canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+    }
+    document.getElementById("assinatura_base64").value = "";
+
+    const previewImg = document.getElementById("preview-assinatura-img");
+    if (previewImg) previewImg.src = "";
+
+    document.getElementById("preview-assinatura-container").style.display =
+      "none";
+    document.getElementById("btn-abrir-assinatura").style.display = "flex";
 
     // Volta o ponteiro de combustível pro VAZIO visualmente
     if (typeof atualizarMarcadorCombustivel === "function") {
@@ -1527,7 +1652,14 @@ function salvarBancoClientes() {
 carregarBancoClientes();
 
 // 4. Sua função blindada de desenhar a tabela (mantida intacta)
-// 4. Desenha a tabela lendo direto do Supabase
+// ==========================================
+// RENDERIZAÇÃO E PAGINAÇÃO DA GESTÃO DE CLIENTES
+// ==========================================
+let cacheGestaoClientes = [];
+let paginaAtualGestao = 1;
+const clientesPorPaginaGestao = 10; // Quebrando de 10 em 10
+
+// 1. Busca todos os clientes do Supabase de uma vez só e ORDENA DE A a Z
 async function renderizarListaClientesCadastrados() {
   const tbody = document.getElementById("tbody-lista-clientes");
   const termo = document
@@ -1535,38 +1667,60 @@ async function renderizarListaClientesCadastrados() {
     .value.trim()
     .toUpperCase();
 
-  // Mostra que está carregando...
   tbody.innerHTML = `<tr><td colspan="4" style="text-align: center;"><i class="ph ph-spinner ph-spin"></i> Buscando nas nuvens...</td></tr>`;
 
   try {
-    // Busca clientes e seus veículos na mesma requisição (Relacional)
-    let query = supabaseClient
-      .from("clientes")
-      .select("*, veiculos(*)")
-      .order("nome", { ascending: true });
+    let query = supabaseClient.from("clientes").select("*, veiculos(*)");
 
-    // Se o usuário digitou algo na busca, filtra no banco
-    if (termo) {
-      query = query.ilike("nome", `%${termo}%`);
-    }
+    if (termo) query = query.ilike("nome", `%${termo}%`);
 
     const { data: clientes, error } = await query;
-
     if (error) throw error;
 
-    tbody.innerHTML = "";
+    let clientesOrdenados = clientes || [];
 
-    if (!clientes || clientes.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum cliente encontrado.</td></tr>`;
-      return;
-    }
+    // 🌟 A MÁGICA DA ORDEM ALFABÉTICA (A a Z)
+    clientesOrdenados.sort((a, b) => {
+      // Pega os nomes, tira os espaços em branco das pontas e deixa tudo maiúsculo para comparar justo
+      const nomeA = (a.nome || "").trim().toUpperCase();
+      const nomeB = (b.nome || "").trim().toUpperCase();
+      return nomeA.localeCompare(nomeB);
+    });
 
-    clientes.forEach((cliente) => {
+    // Guarda na memória a lista já organizada!
+    cacheGestaoClientes = clientesOrdenados;
+    paginaAtualGestao = 1;
+
+    desenharPaginaGestao(); // Manda desenhar a primeira página
+  } catch (erro) {
+    console.error("Erro ao buscar clientes:", erro);
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ef4444;">Erro ao carregar dados do servidor.</td></tr>`;
+  }
+}
+
+// 2. Desenha na tela apenas os 10 clientes da página atual
+function desenharPaginaGestao() {
+  const tbody = document.getElementById("tbody-lista-clientes");
+  const btnPrev = document.getElementById("btn-prev-gestao");
+  const btnNext = document.getElementById("btn-next-gestao");
+  const infoPagina = document.getElementById("info-pagina-gestao");
+
+  tbody.innerHTML = "";
+
+  const totalPaginas =
+    Math.ceil(cacheGestaoClientes.length / clientesPorPaginaGestao) || 1;
+  if (paginaAtualGestao > totalPaginas) paginaAtualGestao = 1;
+
+  const inicio = (paginaAtualGestao - 1) * clientesPorPaginaGestao;
+  const fim = inicio + clientesPorPaginaGestao;
+  const clientesDaPagina = cacheGestaoClientes.slice(inicio, fim);
+
+  if (clientesDaPagina.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-secondary); padding: 20px;">Nenhum cliente encontrado.</td></tr>`;
+  } else {
+    clientesDaPagina.forEach((cliente) => {
       const qtdVeiculos = cliente.veiculos ? cliente.veiculos.length : 0;
       const nomeExibicao = (cliente.nome || "SEM NOME").toUpperCase();
-
-      // Agora usamos o ID real do banco (ex: 1, 2, 3...)
-      const idCliente = cliente.id;
 
       tbody.innerHTML += `
         <tr>
@@ -1574,19 +1728,37 @@ async function renderizarListaClientesCadastrados() {
           <td>${cliente.telefone || "-"}</td>
           <td><span class="badge">${qtdVeiculos} carro(s)</span></td>
           <td style="text-align: right; white-space: nowrap;">
-            <button type="button" class="icon-btn" style="display:inline-flex; padding: 6px; border:none; margin-right: 5px;" title="Editar" onclick="editarCliente(${idCliente})">
+            <button type="button" class="icon-btn" style="display:inline-flex; padding: 6px; border:none; margin-right: 5px;" title="Editar" onclick="editarCliente(${cliente.id})">
               <i class="ph ph-pencil-simple" style="font-size: 1.2rem; color: var(--primary);"></i>
             </button>
-            <button type="button" class="icon-btn btn-danger" style="display:inline-flex; padding: 6px; border:none;" title="Excluir" onclick="excluirCliente(${idCliente})">
+            <button type="button" class="icon-btn btn-danger" style="display:inline-flex; padding: 6px; border:none;" title="Excluir" onclick="excluirCliente(${cliente.id})">
               <i class="ph ph-trash" style="font-size: 1.2rem;"></i>
             </button>
           </td>
         </tr>`;
     });
-  } catch (erro) {
-    console.error("Erro ao buscar clientes:", erro);
-    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: #ef4444;">Erro ao carregar dados do servidor.</td></tr>`;
   }
+
+  // 3. Atualiza os botões (trava se estiver na primeira ou última página)
+  if (infoPagina)
+    infoPagina.innerText = `Página ${paginaAtualGestao} de ${totalPaginas}`;
+
+  if (btnPrev) {
+    btnPrev.disabled = paginaAtualGestao === 1;
+    btnPrev.style.opacity = btnPrev.disabled ? "0.3" : "1";
+    btnPrev.style.cursor = btnPrev.disabled ? "not-allowed" : "pointer";
+  }
+  if (btnNext) {
+    btnNext.disabled = paginaAtualGestao === totalPaginas;
+    btnNext.style.opacity = btnNext.disabled ? "0.3" : "1";
+    btnNext.style.cursor = btnNext.disabled ? "not-allowed" : "pointer";
+  }
+}
+
+// 4. Acionada ao clicar no botão Anterior/Próxima
+function mudarPaginaGestao(direcao) {
+  paginaAtualGestao += direcao;
+  desenharPaginaGestao();
 }
 // 👇 NOVAS FUNÇÕES COMUNICANDO COM O SUPABASE 👇
 
@@ -1668,4 +1840,141 @@ async function confirmarExclusao() {
       alert("Erro ao excluir o cliente das nuvens.");
     }
   }
+}
+
+// ==========================================
+// MÓDULO DE ASSINATURA DIGITAL EM TELA CHEIA (MODAL)
+// ==========================================
+const modalAssinatura = document.getElementById("modal-assinatura");
+const canvas = document.getElementById("canvas-assinatura");
+const ctx = canvas ? canvas.getContext("2d") : null;
+let desenhando = false;
+
+// Elementos da tela principal
+const btnAbrirAssinatura = document.getElementById("btn-abrir-assinatura");
+const btnRefazerAssinatura = document.getElementById("btn-refazer-assinatura");
+const previewContainer = document.getElementById(
+  "preview-assinatura-container",
+);
+const previewImg = document.getElementById("preview-assinatura-img");
+const inputBase64 = document.getElementById("assinatura_base64");
+
+function ajustarTamanhoCanvas() {
+  if (!canvas) return;
+  // A mágica anti-descalibração: O sistema pega o tamanho real do modal na tela do tablet e iguala os pixels internos do Canvas!
+  const container = document.getElementById("container-do-canvas");
+  canvas.width = container.clientWidth;
+  canvas.height = container.clientHeight;
+
+  // Reconfigura a caneta com precisão absoluta
+  ctx.lineWidth = 4;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.strokeStyle = "#000000";
+}
+
+function abrirModalAssinatura() {
+  modalAssinatura.classList.remove("hidden");
+  // Dá um respiro de milissegundos para o CSS abrir o modal antes de medir a tela
+  setTimeout(ajustarTamanhoCanvas, 150);
+}
+
+function fecharModalAssinatura() {
+  modalAssinatura.classList.add("hidden");
+}
+
+if (btnAbrirAssinatura)
+  btnAbrirAssinatura.addEventListener("click", abrirModalAssinatura);
+if (btnRefazerAssinatura)
+  btnRefazerAssinatura.addEventListener("click", abrirModalAssinatura);
+document
+  .getElementById("btn-fechar-modal-assinatura")
+  .addEventListener("click", fecharModalAssinatura);
+
+if (canvas) {
+  canvas.addEventListener("touchstart", (e) => e.preventDefault(), {
+    passive: false,
+  });
+  canvas.addEventListener("touchmove", (e) => e.preventDefault(), {
+    passive: false,
+  });
+
+  // Posição Exata da Caneta
+  function pegarPosicaoX(e) {
+    const rect = canvas.getBoundingClientRect();
+    const escalaX = canvas.width / rect.width; // A calibração!
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    return (clientX - rect.left) * escalaX;
+  }
+
+  function pegarPosicaoY(e) {
+    const rect = canvas.getBoundingClientRect();
+    const escalaY = canvas.height / rect.height; // A calibração!
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return (clientY - rect.top) * escalaY;
+  }
+
+  function iniciarDesenho(e) {
+    desenhando = true;
+    ctx.beginPath();
+    ctx.moveTo(pegarPosicaoX(e), pegarPosicaoY(e));
+  }
+  function desenhar(e) {
+    if (!desenhando) return;
+    ctx.lineTo(pegarPosicaoX(e), pegarPosicaoY(e));
+    ctx.stroke();
+  }
+  function pararDesenho() {
+    desenhando = false;
+  }
+
+  canvas.addEventListener("mousedown", iniciarDesenho);
+  canvas.addEventListener("mousemove", desenhar);
+  canvas.addEventListener("mouseup", pararDesenho);
+  canvas.addEventListener("mouseout", pararDesenho);
+
+  canvas.addEventListener("touchstart", iniciarDesenho);
+  canvas.addEventListener("touchmove", desenhar);
+  canvas.addEventListener("touchend", pararDesenho);
+
+  // BOTÃO: Confirmar Assinatura
+  document
+    .getElementById("btn-confirmar-assinatura")
+    .addEventListener("click", () => {
+      const imagemBase64 = canvas.toDataURL("image/png");
+
+      // Salva invisível para enviar ao Supabase/PDF
+      inputBase64.value = imagemBase64;
+
+      // Mostra o preview bonito na tela principal e esconde o botão gigante
+      previewImg.src = imagemBase64;
+      previewContainer.style.display = "block";
+      btnAbrirAssinatura.style.display = "none";
+
+      fecharModalAssinatura();
+    });
+
+  // BOTÃO: Limpar Assinatura
+  document
+    .getElementById("btn-limpar-assinatura")
+    .addEventListener("click", () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+  window.addEventListener("resize", () => {
+    if (!modalAssinatura.classList.contains("hidden")) {
+      // Tira a foto do que já foi desenhado
+      const desenhoAtual = canvas.toDataURL();
+
+      // Dá 200 milissegundos pro tablet terminar de girar o vidro e o CSS se acomodar
+      setTimeout(() => {
+        ajustarTamanhoCanvas();
+        const imgTemp = new Image();
+        imgTemp.src = desenhoAtual;
+        imgTemp.onload = () => {
+          ctx.drawImage(imgTemp, 0, 0, canvas.width, canvas.height);
+        };
+      }, 200);
+    }
+  });
 }

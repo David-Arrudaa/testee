@@ -9,12 +9,12 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
 
-  <body>
+  <body class="light-theme">
     <div class="container">
       <header class="header">
         <div class="logo-texto">
           <img
-            src="img/logo-branca.png"
+            src="img/logo-preta.png"
             id="logo-autocar"
             alt="Autocar BS"
             style="height: 45px; width: auto"
@@ -37,7 +37,7 @@
               id="btn-tema"
               title="Mudar Tema"
             >
-              <i class="ph ph-sun" id="icone-tema"></i>
+              <i class="ph ph-moon" id="icone-tema"></i>
             </button>
 
             <button
@@ -641,6 +641,87 @@
             </div>
           </section>
 
+          <section class="card">
+            <h2><i class="ph ph-pen-nib"></i> Assinatura do Cliente</h2>
+            <div
+              class="form-control"
+              style="text-align: center; margin-bottom: 0"
+            >
+              <p
+                style="
+                  font-size: 0.85rem;
+                  color: var(--text-secondary);
+                  margin-bottom: 15px;
+                "
+              >
+                Clique no botão abaixo para abrir a prancheta de assinatura em
+                tela cheia.
+              </p>
+
+              <button
+                type="button"
+                class="btn btn-primary"
+                id="btn-abrir-assinatura"
+                style="
+                  justify-content: center;
+                  width: 100%;
+                  padding: 15px;
+                  font-size: 1.1rem;
+                "
+              >
+                <i class="ph ph-signature"></i> Assinar na Tela
+              </button>
+
+              <div
+                id="preview-assinatura-container"
+                style="
+                  display: none;
+                  margin-top: 10px;
+                  border: 2px dashed var(--primary);
+                  border-radius: 8px;
+                  padding: 15px;
+                  background: #fff;
+                "
+              >
+                <p
+                  style="
+                    font-size: 0.8rem;
+                    color: #666;
+                    margin-bottom: 10px;
+                    font-weight: bold;
+                  "
+                >
+                  ASSINATURA CAPTURADA:
+                </p>
+                <img
+                  id="preview-assinatura-img"
+                  src=""
+                  alt="Assinatura"
+                  style="max-height: 100px; display: block; margin: 0 auto"
+                />
+                <button
+                  type="button"
+                  class="btn btn-secondary"
+                  id="btn-refazer-assinatura"
+                  style="
+                    margin-top: 15px;
+                    justify-content: center;
+                    width: auto;
+                    padding: 6px 15px;
+                  "
+                >
+                  <i class="ph ph-eraser"></i> Refazer Assinatura
+                </button>
+              </div>
+
+              <input
+                type="hidden"
+                id="assinatura_base64"
+                name="assinatura_cliente"
+              />
+            </div>
+          </section>
+
           <section
             class="card"
             style="background: transparent; border: none; padding: 0"
@@ -895,6 +976,7 @@
               <i class="ph ph-user-plus"></i> Novo Cliente
             </button>
           </div>
+
           <div class="table-container">
             <table>
               <thead>
@@ -907,6 +989,47 @@
               </thead>
               <tbody id="tbody-lista-clientes"></tbody>
             </table>
+          </div>
+
+          <div
+            class="pagination"
+            id="paginacao-gestao-clientes"
+            style="
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              gap: 15px;
+              margin-top: 15px;
+            "
+          >
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="btn-prev-gestao"
+              onclick="mudarPaginaGestao(-1)"
+              style="padding: 8px 16px; font-size: 0.8rem"
+            >
+              <i class="ph ph-caret-left"></i> Anterior
+            </button>
+            <span
+              class="page-info"
+              id="info-pagina-gestao"
+              style="
+                font-size: 0.9rem;
+                font-weight: bold;
+                color: var(--text-secondary);
+              "
+              >Página 1 de 1</span
+            >
+            <button
+              type="button"
+              class="btn btn-secondary"
+              id="btn-next-gestao"
+              onclick="mudarPaginaGestao(1)"
+              style="padding: 8px 16px; font-size: 0.8rem"
+            >
+              Próxima <i class="ph ph-caret-right"></i>
+            </button>
           </div>
         </div>
 
@@ -1364,6 +1487,117 @@
             style="display: none"
           >
             <i class="ph ph-printer"></i> Imprimir OS
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div
+      id="modal-assinatura"
+      class="modal-overlay hidden"
+      style="z-index: 5000"
+    >
+      <div
+        class="modal-form"
+        style="
+          max-width: 95vw;
+          width: 900px;
+          height: auto; /* 👈 1. MUDOU AQUI (Tirou o 85vh) */
+          display: flex;
+          flex-direction: column;
+          padding: 20px;
+        "
+      >
+        <div class="modal-header" style="margin-bottom: 10px">
+          <h3
+            style="
+              margin: 0;
+              color: var(--text-primary);
+              display: flex;
+              gap: 10px;
+              align-items: center;
+            "
+          >
+            <i class="ph ph-pen-nib"></i> Prancheta de Assinatura
+          </h3>
+          <button
+            type="button"
+            class="btn-close-modal"
+            id="btn-fechar-modal-assinatura"
+            title="Fechar Tela"
+          >
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+
+        <p
+          style="
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 15px;
+            text-align: center;
+          "
+        >
+          Assine com a caneta no espaço abaixo
+        </p>
+
+        <div
+          id="container-do-canvas"
+          style="
+            width: 100%;
+            height: 220px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            background: #ffffff;
+            overflow: hidden;
+            position: relative;
+          "
+        >
+          <canvas
+            id="canvas-assinatura"
+            style="
+              width: 100%;
+              height: 100%;
+              touch-action: none;
+              cursor: crosshair;
+              display: block;
+            "
+          ></canvas>
+        </div>
+
+        <div
+          style="
+            display: flex;
+            gap: 15px;
+            justify-content: space-between;
+            margin-top: 20px;
+          "
+        >
+          <button
+            type="button"
+            class="btn btn-secondary"
+            id="btn-limpar-assinatura"
+            style="
+              flex: 1;
+              justify-content: center;
+              padding: 15px;
+              font-size: 1.1rem;
+            "
+          >
+            <i class="ph ph-eraser"></i> Limpar
+          </button>
+          <button
+            type="button"
+            class="btn btn-primary"
+            id="btn-confirmar-assinatura"
+            style="
+              flex: 2;
+              justify-content: center;
+              padding: 15px;
+              font-size: 1.1rem;
+            "
+          >
+            <i class="ph ph-check"></i> Confirmar Assinatura
           </button>
         </div>
       </div>
