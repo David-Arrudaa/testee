@@ -135,30 +135,44 @@ function gerarPDFImpressao(dados, nivelCombustivel) {
   if (dados.diagnostico === "POPULAR") valorDiagnostico = "R$ 250,00";
   if (dados.diagnostico === "PREMIUM") valorDiagnostico = "R$ 350,00";
 
-  // Lógica para montar a assinatura no PDF
-  let imgAssinatura = "";
+  // Lógica para montar a assinatura blindada (à prova de tablet)
+  let imgAssinatura = `<div style="height: 60px;"></div>`;
+
   if (dados.assinatura_cliente && dados.assinatura_cliente.trim() !== "") {
-    // Se tiver assinatura salva, coloca a imagem por cima da linha
-    imgAssinatura = `<img src="${dados.assinatura_cliente}" style="max-height: 60px; display: block; margin: -40px auto 0 auto;">`;
+    // Usamos position: absolute para "cravar" a foto perfeitamente na linha inferior, independente do aparelho
+    imgAssinatura = `
+      <div style="height: 60px; position: relative;">
+        <img src="${dados.assinatura_cliente}" style="max-height: 75px; max-width: 100%; position: absolute; bottom: -8px; left: 0; right: 0; margin: auto; z-index: 10;">
+      </div>
+    `;
   }
 
   let assinaturasHtml = "";
   if (dados.guincho === "SIM") {
     assinaturasHtml = `
-      <div style="width: 30%; border-top: 1px solid #000; padding-top: 5px; position: relative;">
+      <div style="width: 30%; text-align: center;">
         ${imgAssinatura}
-        Assinatura do Cliente
+        <div style="border-top: 1px solid #000; padding-top: 5px; position: relative; z-index: 1;">Assinatura do Cliente</div>
       </div>
-      <div style="width: 30%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Responsável</div>
-      <div style="width: 30%; border-top: 1px solid #000; padding-top: 5px;">Assinatura do Guincho</div>
+      <div style="width: 30%; text-align: center;">
+        <div style="height: 60px;"></div>
+        <div style="border-top: 1px solid #000; padding-top: 5px;">Assinatura do Responsável</div>
+      </div>
+      <div style="width: 30%; text-align: center;">
+        <div style="height: 60px;"></div>
+        <div style="border-top: 1px solid #000; padding-top: 5px;">Assinatura do Guincho</div>
+      </div>
     `;
   } else {
     assinaturasHtml = `
-      <div style="width: 40%; border-top: 1px solid #000; padding-top: 5px; position: relative; margin-top: 40px;">
+      <div style="width: 40%; text-align: center;">
         ${imgAssinatura}
-        Assinatura do Cliente
+        <div style="border-top: 1px solid #000; padding-top: 5px; position: relative; z-index: 1;">Assinatura do Cliente</div>
       </div>
-      <div style="width: 40%; border-top: 1px solid #000; padding-top: 5px; margin-top: 40px;">Assinatura do Responsável Técnico</div>
+      <div style="width: 40%; text-align: center;">
+        <div style="height: 60px;"></div>
+        <div style="border-top: 1px solid #000; padding-top: 5px;">Assinatura do Responsável Técnico</div>
+      </div>
     `;
   }
 
@@ -170,10 +184,12 @@ function gerarPDFImpressao(dados, nivelCombustivel) {
   const htmlContent = `
       <html>
       <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Checklist - ${dados.veiculo_placa}</title>
         <style>
-          @page { margin: 0; }
-          body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; margin: 15mm; color: #000; line-height: 1.5; }
+          @page { size: A4 portrait; margin: 10mm; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; margin: 10mm; color: #000; line-height: 1.5; }
           .header { display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 15px; }
           .header-title { font-size: 24px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
           .box { border: 1px solid #000; margin-bottom: 18px; border-radius: 4px; overflow: hidden; }
