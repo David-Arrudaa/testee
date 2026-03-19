@@ -1863,7 +1863,7 @@ async function confirmarExclusao() {
 // ==========================================
 const modalAssinatura = document.getElementById("modal-assinatura");
 const canvas = document.getElementById("canvas-assinatura");
-const ctx = canvas ? canvas.getContext("2d") : null;
+const ctx = canvas ? canvas.getContext("2d", { desynchronized: true }) : null;
 let desenhando = false;
 
 // Elementos da tela principal
@@ -1891,12 +1891,18 @@ function ajustarTamanhoCanvas() {
 
 function abrirModalAssinatura() {
   modalAssinatura.classList.remove("hidden");
-  // Dá um respiro de milissegundos para o CSS abrir o modal antes de medir a tela
+
+  // 👇 Trava a rolagem da página de fundo pro tablet focar só na caneta
+  document.body.style.overflow = "hidden";
+
   setTimeout(ajustarTamanhoCanvas, 150);
 }
 
 function fecharModalAssinatura() {
   modalAssinatura.classList.add("hidden");
+
+  // 👇 Destrava a página quando fechar a assinatura
+  document.body.style.overflow = "";
 }
 
 if (btnAbrirAssinatura)
@@ -1915,44 +1921,81 @@ if (canvas) {
     passive: false,
   });
 
-  // Posição Exata da Caneta
+  // ==========================================
+  // NOVO MOTOR DA CANETA (Pointer Events - Alta Sensibilidade)
+  // ==========================================
+  // Variável para guardar o tamanho do quadro uma vez só
+  let canvasRect;
+
   function pegarPosicaoX(e) {
-    const rect = canvas.getBoundingClientRect();
-    const escalaX = canvas.width / rect.width; // A calibração!
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    return (clientX - rect.left) * escalaX;
+    const escalaX = canvas.width / canvasRect.width;
+    return (e.clientX - canvasRect.left) * escalaX;
   }
 
   function pegarPosicaoY(e) {
-    const rect = canvas.getBoundingClientRect();
-    const escalaY = canvas.height / rect.height; // A calibração!
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return (clientY - rect.top) * escalaY;
+    const escalaY = canvas.height / canvasRect.height;
+    return (e.clientY - canvasRect.top) * escalaY;
   }
 
   function iniciarDesenho(e) {
+    e.preventDefault();
     desenhando = true;
+
+    // Tira a medida da tela
+    canvasRect = canvas.getBoundingClientRect();
+
+    // Tenta capturar o ponteiro com segurança
+    try {
+      canvas.setPointerCapture(e.pointerId);
+    } catch (err) {}
+
+    // 👇 --- AQUI ESTÁ O AJUSTE ESTÉTICO --- 👇
+
+    // 1. Define a cor da tinta (Preto puro para OS)
+    ctx.strokeStyle = "#000000";
+
+    // 2. DEFINE A ESPESSURA (A mágica!)
+    // Provavelmente estava em 5 ou mais.
+    // Mude para 2 para uma caneta em gel, ou 1.5 para uma BIC fina.
+    ctx.lineWidth = 2;
+
+    // 3. Arredonda a ponta e as curvas (Pro traço não ficar quadrado/picotado)
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    // ☝️ ------------------------------------- ☝️
+
+    // Inicia o caminho de tinta
     ctx.beginPath();
     ctx.moveTo(pegarPosicaoX(e), pegarPosicaoY(e));
-  }
-  function desenhar(e) {
-    if (!desenhando) return;
+
+    // Pingo inicial
     ctx.lineTo(pegarPosicaoX(e), pegarPosicaoY(e));
     ctx.stroke();
   }
-  function pararDesenho() {
-    desenhando = false;
+  function desenhar(e) {
+    if (!desenhando) return;
+    e.preventDefault();
+    ctx.lineTo(pegarPosicaoX(e), pegarPosicaoY(e));
+    ctx.stroke();
   }
 
-  canvas.addEventListener("mousedown", iniciarDesenho);
-  canvas.addEventListener("mousemove", desenhar);
-  canvas.addEventListener("mouseup", pararDesenho);
-  canvas.addEventListener("mouseout", pararDesenho);
+  function pararDesenho(e) {
+    if (e) e.preventDefault();
+    desenhando = false;
 
-  canvas.addEventListener("touchstart", iniciarDesenho);
-  canvas.addEventListener("touchmove", desenhar);
-  canvas.addEventListener("touchend", pararDesenho);
+    // Corta o fluxo de tinta para garantir que o segundo toque não ligue com o primeiro!
+    ctx.beginPath();
 
+    // O Android já solta a caneta sozinho, não colocamos o releasePointer aqui para evitar o bug!
+  }
+
+  // 👇 LIGAÇÕES PURAS (Sem misturar com touchstart velho!)
+  canvas.addEventListener("pointerdown", iniciarDesenho);
+  canvas.addEventListener("pointermove", desenhar);
+  canvas.addEventListener("pointerup", pararDesenho);
+  canvas.addEventListener("pointerout", pararDesenho);
+  canvas.addEventListener("pointercancel", pararDesenho);
   // BOTÃO: Confirmar Assinatura
   document
     .getElementById("btn-confirmar-assinatura")

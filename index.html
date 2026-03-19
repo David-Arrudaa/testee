@@ -697,7 +697,7 @@
                   id="preview-assinatura-img"
                   src=""
                   alt="Assinatura"
-                  style="max-height: 100px; display: block; margin: 0 auto"
+                  style="max-height: 150px; display: block; margin: 0 auto"
                 />
                 <button
                   type="button"
@@ -1502,17 +1502,26 @@
         style="
           max-width: 95vw;
           width: 900px;
-          height: auto; /* 👈 1. MUDOU AQUI (Tirou o 85vh) */
+          height: auto;
           display: flex;
           flex-direction: column;
           padding: 20px;
+          background-color: #4b5563; /* 👈 FUNDO ESCURO DO MODAL */
+          border: none;
         "
       >
-        <div class="modal-header" style="margin-bottom: 10px">
+        <div
+          class="modal-header"
+          style="
+            margin-bottom: 5px;
+            border-bottom: 1px solid #6b7280;
+            padding-bottom: 15px;
+          "
+        >
           <h3
             style="
               margin: 0;
-              color: var(--text-primary);
+              color: #ffffff; /* 👈 TEXTO BRANCO PARA DAR CONTRASTE */
               display: flex;
               gap: 10px;
               align-items: center;
@@ -1525,6 +1534,7 @@
             class="btn-close-modal"
             id="btn-fechar-modal-assinatura"
             title="Fechar Tela"
+            style="color: #ffffff"
           >
             <i class="ph ph-x"></i>
           </button>
@@ -1532,8 +1542,9 @@
 
         <p
           style="
-            color: var(--text-secondary);
+            color: #e5e7eb; /* 👈 TEXTO CLARO */
             font-size: 1rem;
+            margin-top: 15px;
             margin-bottom: 15px;
             text-align: center;
           "
@@ -1545,26 +1556,34 @@
           id="container-do-canvas"
           style="
             width: 100%;
-            height: 100px;
-            background: #fff;
+            height: 200px;
+            background: #ffffff;
             border-radius: 8px;
             overflow: hidden;
             position: relative;
-            border-bottom: 2px solid #ccc;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
           "
         >
           <canvas
             id="canvas-assinatura"
-            style="position: absolute; top: 0; left: 0; z-index: 10"
+            style="
+              position: absolute;
+              top: 0;
+              left: 0;
+              z-index: 10;
+              touch-action: none;
+              user-select: none;
+              -webkit-user-select: none;
+            "
           ></canvas>
 
           <div
             style="
               position: absolute;
-              bottom: 30%;
+              bottom: 25px;
               left: 10%;
               right: 10%;
-              border-bottom: 2px dashed #999;
+              border-bottom: 2px dashed #999999;
               pointer-events: none;
               z-index: 1;
             "
@@ -1588,6 +1607,9 @@
               justify-content: center;
               padding: 15px;
               font-size: 1.1rem;
+              background: #ffffff;
+              color: #000000;
+              border: none;
             "
           >
             <i class="ph ph-eraser"></i> Limpar
