@@ -210,8 +210,9 @@ function gerarPDFImpressao(dados, nivelCombustivel) {
           }
         </style>
       </head>
-      <body>
-        <div class="header">
+
+      <body onload="setTimeout(function() { window.focus(); window.print(); }, 200);">
+      <div class="header">
           <img src="${logoUrl}" style="width: 200px; height: 65px; object-fit: contain;" alt="Logo Autocar" />
           <div class="header-title">CHECKLIST DE ENTRADA</div>
         </div>
@@ -291,11 +292,6 @@ function gerarPDFImpressao(dados, nivelCombustivel) {
   const win = window.open("", "", "height=800,width=900");
   win.document.write(htmlContent);
   win.document.close();
-
-  setTimeout(() => {
-    win.focus();
-    win.print();
-  }, 2500);
 }
 
 // 2. Botão de Imprimir da Tela Principal (Lê a tela e manda pra Fábrica)
@@ -368,15 +364,15 @@ document
   .getElementById("btn-imprimir-sucesso")
   .addEventListener("click", () => {
     if (ultimoChecklistSalvo) {
-      // Puxa o nível de combustível da tela (ou vazio se não achar)
-      const nivelCombustivel = document.getElementById("nivel_combustivel")
-        ? document.getElementById("nivel_combustivel").value
-        : "VAZIO";
+      // 👇 A MÁGICA AQUI: Puxa o nível de combustível direto da memória RAM (do pacote que foi salvo),
+      // e ignora completamente o que está na tela (que já foi apagada)!
+      const nivelCombustivel =
+        ultimoChecklistSalvo.nivel_combustivel || "VAZIO";
 
       // Manda pra fábrica de PDFs!
       gerarPDFImpressao(ultimoChecklistSalvo, nivelCombustivel);
 
-      // (Opcional) Fecha o modal de sucesso depois que abrir a impressão
+      // Fecha o modal de sucesso depois que abrir a impressão
       fecharModalSucesso();
     }
   });
