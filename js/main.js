@@ -790,6 +790,62 @@ async function buscarCEP(cep, tipoFormulario) {
 }
 
 // ==========================================
+// 6.2 INTEGRAÇÃO VIACEP (Busca Reversa: Endereço -> CEP)
+// ==========================================
+async function buscarCepPorEndereco(tipoFormulario) {
+  const prefixo = tipoFormulario === "cadastro" ? "cad_cliente_" : "cliente_";
+
+  const uf = document
+    .getElementById(prefixo + "uf")
+    .value.trim()
+    .toUpperCase();
+  const cidade = document.getElementById(prefixo + "cidade").value.trim();
+  const rua = document.getElementById(prefixo + "endereco").value.trim();
+
+  // O ViaCEP exige: UF com 2 letras, Cidade com 3+ letras e Rua com 3+ letras
+  if (uf.length !== 2 || cidade.length < 3 || rua.length < 3) {
+    return; // Se faltar dado, ele fica quieto e não faz nada
+  }
+
+  const idIcone =
+    tipoFormulario === "cadastro" ? "icon-cad-cep-loading" : "icon-cep-loading";
+  const iconeCep = document.getElementById(idIcone);
+
+  try {
+    if (iconeCep) {
+      iconeCep.classList.replace("ph-magnifying-glass", "ph-spinner");
+      iconeCep.classList.add("ph-spin");
+    }
+
+    // Mágica do ViaCEP Reverso (URL: uf/cidade/rua/json)
+    const url = `https://viacep.com.br/ws/${uf}/${cidade}/${rua}/json/`;
+    const resposta = await fetch(url);
+    const dados = await resposta.json();
+
+    // Como podem existir várias ruas com nomes parecidos na mesma cidade, a API devolve uma lista
+    if (!dados.erro && dados.length > 0) {
+      // Pega o CEP do primeiro resultado da lista!
+      const cepEncontrado = dados[0].cep;
+      const inputCep = document.getElementById(prefixo + "cep");
+
+      inputCep.value = cepEncontrado;
+
+      // Aplica a sua máscara maravilhosa para ficar 00000-000
+      if (mascaras.cep) {
+        inputCep.value = mascaras.cep(cepEncontrado);
+      }
+    }
+  } catch (erro) {
+    console.error("Erro na busca reversa de CEP:", erro);
+  } finally {
+    if (iconeCep) {
+      iconeCep.classList.replace("ph-spinner", "ph-magnifying-glass");
+      iconeCep.classList.remove("ph-spin");
+    }
+  }
+}
+
+// ==========================================
 // INTEGRAÇÃO API DE PLACAS (Placas.app.br)
 // ==========================================
 async function buscarPlacaAPI(placaDigitada) {
@@ -1447,6 +1503,36 @@ window.onload = function () {
       window.scrollTo({ top: 0, behavior: "smooth" });
     });
   }
+
+  // LIGANDO A BUSCA REVERSA NO CHECKLIST PRINCIPAL (Para os 3 campos)
+  const camposReversosChecklist = [
+    "cliente_uf",
+    "cliente_cidade",
+    "cliente_endereco",
+  ];
+  camposReversosChecklist.forEach((idCampo) => {
+    const campo = document.getElementById(idCampo);
+    if (campo) {
+      campo.addEventListener("blur", function () {
+        buscarCepPorEndereco("checklist");
+      });
+    }
+  });
+
+  // LIGANDO A BUSCA REVERSA NO MODAL DE CADASTRO (Para os 3 campos)
+  const camposReversosCadastro = [
+    "cad_cliente_uf",
+    "cad_cliente_cidade",
+    "cad_cliente_endereco",
+  ];
+  camposReversosCadastro.forEach((idCampo) => {
+    const campo = document.getElementById(idCampo);
+    if (campo) {
+      campo.addEventListener("blur", function () {
+        buscarCepPorEndereco("cadastro");
+      });
+    }
+  });
 };
 
 // ==========================================
