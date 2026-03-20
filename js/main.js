@@ -188,8 +188,9 @@ function gerarPDFImpressao(dados, nivelCombustivel) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Checklist - ${dados.veiculo_placa}</title>
         <style>
-          @page { size: A4 portrait; margin: 10mm; }
-          body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; margin: 10mm; color: #000; line-height: 1.5; }
+          @page { size: A4 portrait; margin: 0; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; padding: 10mm; margin: 0; color: #000; line-height: 1.5; }
+          
           .header { display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 15px; }
           .header-title { font-size: 24px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
           .box { border: 1px solid #000; margin-bottom: 18px; border-radius: 4px; overflow: hidden; }
