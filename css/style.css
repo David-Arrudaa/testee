@@ -12,7 +12,7 @@
 }
 
 body.light-theme {
-  --bg-body: #f0f2f5; /* Fundo da página cinza bem claro */
+  --bg-body: rgb(228, 224, 228); /* Fundo da página cinza bem claro */
   --bg-card: #ffffff; /* Fundo dos cartões totalmente branco */
   --bg-input: #f3f4f6; /* Fundo das caixinhas de digitar um pouco mais cinza */
   --border: #d1d5db; /* Borda mais suave e clara */
@@ -63,17 +63,48 @@ main {
 /* =========================================
    4. CABEÇALHO (Header)
    ========================================= */
+/* ==========================================
+   AJUSTES DO NOVO CABEÇALHO LIMPO
+   ========================================== */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: 15px;
-  border-bottom: 1px solid var(--border);
+  padding: 20px 20px;
+  background-color: var(--bg-card);
+
+  /* 👇 A MUDANÇA ESTÁ AQUI 👇 */
+  border: 1px solid var(--border); /* Borda fina padrão em volta */
+  border-left: 4px solid var(--primary) !important; /* A listra vermelha na ESQUERDA */
+  border-bottom: none; /* Garante que não tenha linha vermelha embaixo */
+
+  border-radius: 8px; /* Arredondamento igual ao dos cartões */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* A sombra chique */
+  margin-bottom: 20px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px; /* 👇 Define um espaçamento pequeno e fixo entre os botões! Pode aumentar ou diminuir se quiser. 👇 */
+  justify-content: flex-end; /* Alinha o grupo inteiro à direita */
 }
 
 .logo-texto {
-  font-size: 1.5rem;
-  font-weight: bold;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* 👇 O SEGREDO QUE DOMA A LOGO GIGANTE 👇 */
+.logo-texto img {
+  max-width: 220px; /* Trava a largura da logo. Pode aumentar ou diminuir se quiser! */
+  height: auto;
+}
+
+.logo-texto h2 {
+  font-size: 1.1rem;
+  margin: 0;
   color: var(--text-primary);
 }
 
@@ -139,11 +170,30 @@ main {
    ========================================= */
 .card {
   background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 8px;
+
+  /* 👇 1. ARRANCAMOS A BORDA FINA ANTIGA INTEIRA 👇 */
+  border: none !important;
+
+  /* 👇 2. A MÁGICA DO ARREDONDAMENTO CHIQUE 👇 */
+  border-radius: 8px; /* Mesma curva chique original */
+  overflow: hidden; /* Pra garantir que os cantos fiquem limpos */
+
+  /* 👇 3. A NOVA ASSINATURA VISUAL AUTOCAR 👇 */
+  /* Colocamos as outras 3 bordas como eram (1px grey) */
+  border-top: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  /* 👇 E A MÁGICA: A Linha Vermelha Chique Autocar so na ESQUERDA 👇 */
+  border-left: 3px solid var(--primary) !important;
+
+  /* 👇 4. A SOMBRA CHIQUÉRRIMA INFALÍVEL 👇 */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); /* Sombra suave para dar profundidade e destacar o arredondamento */
+
   padding: 20px;
+  /* Garante que o espaçamento entre os cartões (definido no gap do container) continue funcionando */
 }
 
+/* O resto do seu código de cartões continua original e intacto! */
 .card h2 {
   font-size: 1.1rem;
   margin-bottom: 15px;
@@ -153,9 +203,8 @@ main {
 }
 
 .card h2 i {
-  color: var(--primary);
+  color: var(--primary); /* 👈 O seu vermelho original salvo! */
 }
-
 /* =========================================
    6. FORMULÁRIOS E GRID (O sistema de grade)
    ========================================= */
@@ -762,4 +811,179 @@ th {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ==========================================
+   GAVETA DO MENU LATERAL
+   ========================================== */
+
+/* Esconde a gaveta 300px para a DIREITA, fora da tela */
+.menu-lateral {
+  position: fixed;
+  top: 0;
+  right: -320px;
+  width: 300px;
+  height: 100vh;
+  background-color: var(--bg-card);
+  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+  transition: right 0.3s ease-in-out; /* O efeito suave de deslizar */
+  z-index: 2000; /* Fica por cima de tudo */
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px 0 0 20px;
+  overflow: hidden;
+}
+
+/* Quando o JS colocar essa classe, a gaveta volta pra posição 0 (dentro da tela) */
+.menu-lateral.aberto {
+  right: 0;
+}
+
+.menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--bg-body);
+}
+
+.menu-conteudo {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  overflow-y: auto;
+}
+
+/* Fundo escuro atrás do menu (clicável para fechar) */
+.overlay-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(2px);
+  z-index: 1999;
+  transition: opacity 0.3s ease;
+}
+
+.overlay-menu.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* ==========================================
+   A OPÇÃO NUCLEAR DO MENU (SOBRESCREVE TUDO)
+   ========================================== */
+.menu-conteudo {
+  padding: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0 !important;
+}
+
+/* Esse seletor diz: "Apenas os botões com a classe menu-item que estão DENTRO da gaveta" */
+aside#menu-lateral .menu-conteudo button.menu-item {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important; /* Arranca a sombra do botão global */
+  border-radius: 0 !important; /* Arranca o arredondado global */
+  margin: 0 !important; /* Tira margens ocultas globais */
+
+  width: 100% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+
+  border-bottom: 1px solid var(--border) !important;
+  color: var(--text-primary) !important;
+  padding: 20px 25px !important;
+  font-size: 1.1rem !important;
+  font-family: inherit !important;
+  font-weight: 500 !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+}
+
+aside#menu-lateral .menu-conteudo button.menu-item:last-child {
+  border-bottom: none !important;
+}
+
+aside#menu-lateral .menu-conteudo button.menu-item:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+}
+
+aside#menu-lateral .menu-conteudo button.menu-item i {
+  color: var(--primary) !important;
+  font-size: 1.5rem !important;
+  margin-right: 15px !important;
+}
+/* ==========================================
+   VISUAL DO CRM E NOTIFICAÇÕES
+   ========================================== */
+
+/* A bolinha vermelha em cima do sininho */
+.badge-notificacao {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  background-color: #ef4444; /* Vermelho alerta */
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 800;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--bg-card); /* Bordinha pra não grudar no sino */
+}
+
+/* O cartão de cada cliente atrasado dentro do modal */
+.cliente-crm-card {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-left: 4px solid #f59e0b; /* Listra Laranja pra dar ideia de 'Atenção' */
+  padding: 15px;
+  border-radius: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+}
+
+.cliente-crm-info h4 {
+  margin-bottom: 5px;
+  color: var(--text-primary);
+  font-size: 1.1rem;
+}
+
+.cliente-crm-info p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 2px;
+}
+
+/* O Botão do WhatsApp */
+.btn-whatsapp {
+  background-color: #25d366;
+  color: white !important;
+  padding: 10px 15px;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: 0.2s;
+  border: none;
+}
+
+.btn-whatsapp:hover {
+  background-color: #128c7e;
+  transform: scale(1.05);
 }

@@ -13,53 +13,89 @@
     <div class="container">
       <header class="header">
         <div class="logo-texto">
-          <img
-            src="img/logo-preta.png"
-            id="logo-autocar"
-            alt="Autocar BS"
-            style="height: 45px; width: auto"
-          />
+          <img id="logo-autocar" src="img/logo-preta.png" alt="Autocar BS" />
         </div>
-        <nav>
-          <div class="header-actions">
-            <button
-              type="button"
-              class="icon-btn"
-              id="btn-gestao-clientes"
-              title="Gestão de Clientes"
-            >
-              <i class="ph ph-users"></i>
-            </button>
 
-            <button
-              type="button"
-              class="icon-btn"
-              id="btn-tema"
-              title="Mudar Tema"
+        <div class="header-actions">
+          <button
+            type="button"
+            id="btn-notificacoes"
+            class="icon-btn"
+            title="Alertas de Revisão"
+            style="position: relative; border: none; background: transparent"
+          >
+            <i
+              class="ph ph-bell"
+              style="font-size: 2rem; color: var(--primary)"
+            ></i>
+            <span id="badge-notificacao" class="badge-notificacao hidden"
+              >0</span
             >
-              <i class="ph ph-moon" id="icone-tema"></i>
-            </button>
+          </button>
 
-            <button
-              type="button"
-              class="icon-btn"
-              id="btn-historico"
-              title="Histórico de Checklists"
-            >
-              <i class="ph ph-clock-counter-clockwise"></i>
-            </button>
-
-            <button
-              type="button"
-              class="icon-btn btn-danger"
-              id="btn-limpar"
-              title="Limpar Formulário"
-            >
-              <i class="ph ph-broom"></i>
-            </button>
-          </div>
-        </nav>
+          <button
+            type="button"
+            id="btn-abrir-menu"
+            class="icon-btn"
+            title="Menu"
+            style="border: none; background: transparent"
+          >
+            <i
+              class="ph ph-list"
+              style="font-size: 2rem; color: var(--primary)"
+            ></i>
+          </button>
+        </div>
       </header>
+
+      <div id="overlay-menu" class="overlay-menu hidden"></div>
+
+      <aside id="menu-lateral" class="menu-lateral">
+        <div class="menu-header">
+          <h3>Menu Autocar BS</h3>
+          <button type="button" id="btn-fechar-menu" class="icon-btn">
+            <i class="ph ph-x" style="font-size: 1.5rem"></i>
+          </button>
+        </div>
+
+        <div class="menu-conteudo">
+          <button type="button" id="btn-historico" class="menu-item">
+            <i
+              class="ph ph-clock-counter-clockwise"
+              style="color: var(--primary)"
+            ></i>
+            Histórico de OS
+          </button>
+
+          <button
+            type="button"
+            id="btn-imprimir-mecanico-menu"
+            class="menu-item"
+          >
+            <i class="ph ph-printer" style="color: var(--primary)"></i>
+            Checklist Mecânico
+          </button>
+
+          <button type="button" id="btn-gestao-clientes" class="menu-item">
+            <i class="ph ph-users" style="color: var(--primary)"></i>
+            Gestão de Clientes
+          </button>
+
+          <button type="button" id="btn-limpar" class="menu-item">
+            <i class="ph ph-eraser" style="color: var(--primary)"></i>
+            Limpar Tela
+          </button>
+
+          <button type="button" id="btn-tema" class="menu-item">
+            <i
+              id="icone-tema"
+              class="ph ph-moon"
+              style="color: var(--primary)"
+            ></i>
+            Mudar Tema
+          </button>
+        </div>
+      </aside>
 
       <main>
         <form id="form-checklist" autocomplete="off">
@@ -1714,6 +1750,45 @@
           >
             Sim, Excluir
           </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="modal-notificacoes" class="modal-overlay hidden">
+      <div class="modal-form" style="max-width: 650px">
+        <div class="modal-header">
+          <h2>
+            <i class="ph ph-bell-ringing" style="color: var(--primary)"></i>
+            Alertas de Revisão (6+ Meses)
+          </h2>
+          <button
+            type="button"
+            id="btn-fechar-notificacoes"
+            class="btn-close-modal"
+          >
+            <i class="ph ph-x"></i>
+          </button>
+        </div>
+
+        <p
+          style="
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+          "
+        >
+          Clientes que não visitam a oficina há 6 meses ou mais. Entre em
+          contato para oferecer uma revisão preventiva!
+        </p>
+
+        <div
+          class="modal-body"
+          id="lista-notificacoes"
+          style="display: flex; flex-direction: column; gap: 10px"
+        >
+          <p style="text-align: center; padding: 20px">
+            Analisando banco de dados...
+          </p>
         </div>
       </div>
     </div>
