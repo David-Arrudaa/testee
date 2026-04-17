@@ -395,10 +395,8 @@ let paginaAtualClientes = 1;
 const clientesPorPagina = 10;
 
 // 1. Puxa os checklists DIRETAMENTE DAS NUVENS (Supabase)
-// 1. Puxa os checklists DIRETAMENTE DAS NUVENS (Supabase)
 async function carregarBancoChecklists() {
   try {
-    // 👇 ADICIONAMOS O 'id' AQUI NO SELECT 👇
     const { data, error } = await supabaseClient
       .from("historico_checklists")
       .select("id, dados_checklist")
@@ -410,15 +408,18 @@ async function carregarBancoChecklists() {
 
     if (data && data.length > 0) {
       data.forEach((linha) => {
-        // Pegamos o pacote e "colamos" o ID da nuvem nele
         let pacote = linha.dados_checklist;
-        pacote.id_nuvem = linha.id; // 👈 MÁGICA: Guarda o ID verdadeiro!
-
+        pacote.id_nuvem = linha.id;
         bancoChecklists.push(pacote);
       });
     }
 
     renderizarTabelaClientes();
+
+    // 👇 A MÁGICA ENTRA AQUI! 👇
+    atualizarSininhoCRM(); // Acende a bolinha se tiver cliente atrasado!
+    // 👆 ======================= 👆
+
     console.log("Histórico baixado das nuvens com sucesso!");
   } catch (erro) {
     console.error("Erro ao puxar o histórico da nuvem:", erro);
@@ -426,6 +427,9 @@ async function carregarBancoChecklists() {
     if (dadosSalvos) {
       bancoChecklists = JSON.parse(dadosSalvos);
       renderizarTabelaClientes();
+
+      // 👇 Coloca aqui no backup também, por garantia! 👇
+      atualizarSininhoCRM();
     }
   }
 }
@@ -1082,6 +1086,44 @@ window.onload = function () {
   preencherDataHoraAtual();
   verificarLuzPainel();
 
+  // ==========================================
+  // MOTOR DO MENU LATERAL (GAVETA)
+  // ==========================================
+  const menuLateral = document.getElementById("menu-lateral");
+  const overlayMenu = document.getElementById("overlay-menu");
+
+  function abrirMenu() {
+    menuLateral.classList.add("aberto");
+    overlayMenu.classList.remove("hidden");
+    document.body.style.overflow = "hidden"; // Trava o fundo pra não rolar
+  }
+
+  function fecharMenu() {
+    menuLateral.classList.remove("aberto");
+    overlayMenu.classList.add("hidden");
+    document.body.style.overflow = ""; // Destrava o fundo
+  }
+
+  document
+    .getElementById("btn-abrir-menu")
+    .addEventListener("click", abrirMenu);
+  document
+    .getElementById("btn-fechar-menu")
+    .addEventListener("click", fecharMenu);
+
+  // Se clicar no fundo escuro, a gaveta fecha sozinha!
+  overlayMenu.addEventListener("click", fecharMenu);
+
+  // E aqui vai um truque de Mestre: fechar o menu automaticamente
+  // quando o mecânico clicar em qualquer um dos botões dentro dele!
+  document.getElementById("btn-limpar").addEventListener("click", fecharMenu);
+  document
+    .getElementById("btn-historico")
+    .addEventListener("click", fecharMenu);
+  document
+    .getElementById("btn-gestao-clientes")
+    .addEventListener("click", fecharMenu);
+
   // Evento da Luz do Painel
   const radiosLuzPainel = document.querySelectorAll('input[name="luz_painel"]');
   radiosLuzPainel.forEach((radio) => {
@@ -1531,6 +1573,30 @@ window.onload = function () {
       campo.addEventListener("blur", function () {
         buscarCepPorEndereco("cadastro");
       });
+    }
+  });
+
+  // ==========================================
+  // RELÓGIO INTELIGENTE (Atualização Automática)
+  // ==========================================
+
+  // Função que confere se pode atualizar a hora (Não atualiza se for histórico)
+  function manterRelogioAtualizado() {
+    const statusEdicao = document.getElementById("status-edicao");
+
+    // Se a etiqueta NÃO for "VISUALIZANDO HISTÓRICO", significa que é um carro novo. Pode atualizar!
+    if (statusEdicao && statusEdicao.innerText !== "VISUALIZANDO HISTÓRICO") {
+      preencherDataHoraAtual();
+    }
+  }
+
+  // 1. O "Coração": Atualiza de 1 em 1 minuto (60.000 milissegundos)
+  setInterval(manterRelogioAtualizado, 60000);
+
+  // 2. O "Despertador": Atualiza no EXATO SEGUNDO que o tablet é desbloqueado
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible") {
+      manterRelogioAtualizado();
     }
   });
 };
@@ -2119,4 +2185,624 @@ if (canvas) {
       }, 200);
     }
   });
+}
+
+// ==========================================
+// MÓDULO CRM: ALERTAS DE REVISÃO (6 MESES)
+// ==========================================
+
+function verificarRevisoesPendentes() {
+  const hoje = new Date();
+  const clientesParaAvisar = [];
+  const carrosAnalisados = new Set();
+
+  // O bancoChecklists já vem do Supabase (do mais novo pro mais velho)
+  bancoChecklists.forEach((chk) => {
+    const placa = chk.veiculo_placa;
+
+    // Só analisa a primeira vez que acha a placa (que é a visita mais recente)
+    if (placa && !carrosAnalisados.has(placa)) {
+      carrosAnalisados.add(placa);
+
+      const partesData = (chk.data_entrada || "").split("/");
+
+      if (partesData.length === 3) {
+        // Converte "DD/MM/AAAA" para formato que o JS entende
+        const dataUltimaVisita = new Date(
+          partesData[2],
+          partesData[1] - 1,
+          partesData[0],
+        );
+
+        let diffMeses =
+          (hoje.getFullYear() - dataUltimaVisita.getFullYear()) * 12;
+        diffMeses -= dataUltimaVisita.getMonth();
+        diffMeses += hoje.getMonth();
+
+        // Se passou 6 meses ou mais, vai pra lista de cobrança!
+        if (diffMeses >= 6) {
+          clientesParaAvisar.push({
+            nome: chk.cliente_nome || "Cliente",
+            telefone: chk.cliente_telefone || "",
+            placa: placa,
+            veiculo: `${chk.veiculo_marca || ""} ${chk.veiculo_modelo || ""}`,
+            data: chk.data_entrada,
+            mesesAtraso: diffMeses,
+          });
+        }
+      }
+    }
+  });
+
+  return clientesParaAvisar;
+}
+
+// ==========================================
+// MÓDULO CRM: ALERTAS DE REVISÃO (6 MESES)
+// ==========================================
+
+// 1. Função Mágica para Ocultar (Snooze) por 30 dias
+window.snoozeAlerta = function (placa) {
+  // Pega os avisos ocultados do navegador (ou cria um objeto vazio)
+  let snoozadas = JSON.parse(
+    localStorage.getItem("autocar_crm_snoozadas") || "{}",
+  );
+
+  // Salva a placa com a data e hora exata de AGORA
+  snoozadas[placa] = Date.now();
+
+  // Salva de volta no navegador
+  localStorage.setItem("autocar_crm_snoozadas", JSON.stringify(snoozadas));
+
+  // Atualiza a tela na mesma hora para o aviso sumir e a bolinha diminuir!
+  atualizarSininhoCRM();
+};
+
+function verificarRevisoesPendentes() {
+  const hoje = new Date();
+  const clientesParaAvisar = [];
+  const carrosAnalisados = new Set();
+
+  // Puxa a lista de placas ocultadas
+  const snoozadas = JSON.parse(
+    localStorage.getItem("autocar_crm_snoozadas") || "{}",
+  );
+  const TRINTA_DIAS_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias em milissegundos
+
+  // O bancoChecklists já vem do Supabase (do mais novo pro mais velho)
+  bancoChecklists.forEach((chk) => {
+    const placa = chk.veiculo_placa;
+
+    // Só analisa a primeira vez que acha a placa (que é a visita mais recente)
+    if (placa && !carrosAnalisados.has(placa)) {
+      carrosAnalisados.add(placa);
+
+      // 👇 MÁGICA DO SNOOZE: Verifica se a placa está ocultada 👇
+      if (snoozadas[placa]) {
+        const tempoOculto = hoje.getTime() - snoozadas[placa];
+        if (tempoOculto < TRINTA_DIAS_MS) {
+          return; // Sai desta volta do loop, o carro continua invisível por 30 dias!
+        }
+      }
+      // 👆 ==================================================== 👆
+
+      const partesData = (chk.data_entrada || "").split("/");
+
+      if (partesData.length === 3) {
+        // Converte "DD/MM/AAAA" para formato que o JS entende
+        const dataUltimaVisita = new Date(
+          partesData[2],
+          partesData[1] - 1,
+          partesData[0],
+        );
+
+        let diffMeses =
+          (hoje.getFullYear() - dataUltimaVisita.getFullYear()) * 12;
+        diffMeses -= dataUltimaVisita.getMonth();
+        diffMeses += hoje.getMonth();
+
+        // Se passou 6 meses ou mais, vai pra lista de cobrança!
+        if (diffMeses >= 6) {
+          clientesParaAvisar.push({
+            nome: chk.cliente_nome || "Cliente",
+            telefone: chk.cliente_telefone || "",
+            placa: placa,
+            veiculo: `${chk.veiculo_marca || ""} ${chk.veiculo_modelo || ""}`,
+            data: chk.data_entrada,
+            mesesAtraso: diffMeses,
+          });
+        }
+      }
+    }
+  });
+
+  return clientesParaAvisar;
+}
+
+// Função que constrói os cartões na tela
+window.atualizarSininhoCRM = function () {
+  const pendentes = verificarRevisoesPendentes();
+  const badge = document.getElementById("badge-notificacao");
+  const listaHTML = document.getElementById("lista-notificacoes");
+
+  // 1. Acende ou apaga a bolinha do sininho
+  if (pendentes.length > 0) {
+    badge.innerText = pendentes.length;
+    badge.classList.remove("hidden");
+  } else {
+    badge.classList.add("hidden");
+  }
+
+  // 2. Monta o HTML dentro do modal
+  listaHTML.innerHTML = ""; // Limpa a lista anterior
+
+  if (pendentes.length === 0) {
+    listaHTML.innerHTML =
+      "<p style='text-align:center; padding: 20px; color: var(--text-secondary);'>Tudo em dia! Nenhum cliente aguardando contato no momento. 🎉</p>";
+    return;
+  }
+
+  // 3. Cria um cartão para cada cliente atrasado
+  pendentes.forEach((cliente) => {
+    // Limpa o telefone pra colocar no link do Zap (só números)
+    const zapNum = cliente.telefone.replace(/\D/g, "");
+
+    // Pega só o primeiro nome e deixa a primeira letra maiúscula
+    const primeiroNome = (cliente.nome || "Cliente").split(" ")[0];
+    const nomeFormatado =
+      primeiroNome.charAt(0).toUpperCase() +
+      primeiroNome.slice(1).toLowerCase();
+
+    // A Mensagem Pronta Exata!
+    const textoZap = `Olá *${nomeFormatado}*, tudo bem? Aqui é da AUTOCAR BS! 🚗🔧\nNotamos que já faz um tempinho desde a última revisão do seu veículo com a gente. Que tal agendarmos um check-up preventivo para garantir que está tudo 100% para você rodar com segurança?`;
+
+    const msg = encodeURIComponent(textoZap);
+
+    // O Link mágico do zap
+    const linkZap = zapNum ? `https://wa.me/55${zapNum}?text=${msg}` : "#";
+
+    const card = `
+        <div class="cliente-crm-card">
+          <div class="cliente-crm-info">
+            <h4>${cliente.nome}</h4>
+            <p><strong>Veículo:</strong> ${cliente.veiculo} (Placa: ${cliente.placa})</p>
+            <p><strong>Última Visita:</strong> ${cliente.data} <span style="color: #ef4444; font-weight: bold;">(${cliente.mesesAtraso} meses atrás)</span></p>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            ${zapNum ? `<a href="${linkZap}" target="_blank" class="btn-whatsapp" onclick="snoozeAlerta('${cliente.placa}')" title="Enviar WhatsApp"><i class="ph ph-whatsapp-logo" style="font-size:1.5rem;"></i> Avisar</a>` : '<span style="color: #ef4444; font-size: 0.8rem; margin-right: 10px;">Sem telefone</span>'}
+            
+            <button type="button" class="icon-btn" style="padding: 10px; border: none; background: transparent; color: var(--text-secondary);" onclick="snoozeAlerta('${cliente.placa}')" title="Ocultar por 30 dias">
+              <i class="ph ph-x" style="font-size: 1.2rem;"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    listaHTML.innerHTML += card;
+  });
+};
+
+// Abrir e fechar o Modal do Sininho
+document.getElementById("btn-notificacoes").addEventListener("click", () => {
+  document.getElementById("modal-notificacoes").classList.remove("hidden");
+  atualizarSininhoCRM(); // Garante que a lista tá sempre fresca quando abre!
+});
+
+document
+  .getElementById("btn-fechar-notificacoes")
+  .addEventListener("click", () => {
+    document.getElementById("modal-notificacoes").classList.add("hidden");
+  });
+
+// Abrir e fechar o Modal do Sininho
+document.getElementById("btn-notificacoes").addEventListener("click", () => {
+  document.getElementById("modal-notificacoes").classList.remove("hidden");
+  atualizarSininhoCRM(); // Garante que a lista tá sempre fresca quando abre!
+});
+
+document
+  .getElementById("btn-fechar-notificacoes")
+  .addEventListener("click", () => {
+    document.getElementById("modal-notificacoes").classList.add("hidden");
+  });
+
+// ==========================================
+// FÁBRICA DE PDF: CHECKLIST DO MECÂNICO (VERSO)
+// ==========================================
+function gerarPDFChecklistMecanico() {
+  const logoUrl = new URL(
+    "img/logo-preta.png",
+    window.location.origin + window.location.pathname,
+  ).href;
+
+  const htmlContent = `
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Checklist Técnico - Verso</title>
+        <style>
+          @page { size: A4 portrait; margin: 10mm; }
+          body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 14px; color: #000; padding: 10mm; }
+          /* Centralizamos a logo já que não tem mais os dados do carro do lado */
+          .header { display: flex; justify-content: center; align-items: center; border-bottom: 2px solid #000; padding-bottom: 15px; margin-bottom: 20px; }
+          .header img { max-height: 70px; }
+          .title { text-align: center; font-size: 20px; font-weight: bold; text-decoration: underline; margin-bottom: 30px; }
+          .section { margin-bottom: 30px; }
+          .section-title { font-size: 18px; font-weight: bold; background: #eee; border: 1px solid #000; padding: 5px 10px; margin-bottom: 15px; }
+          .item { display: flex; align-items: center; margin-bottom: 10px; font-size: 15px; }
+          .box { font-family: monospace; font-size: 16px; margin-right: 15px; font-weight: bold; }
+          .footer { margin-top: 50px; text-align: center; font-weight: bold; font-size: 13px; }
+          .signature-area { display: flex; justify-content: space-between; margin-top: 40px; }
+          .sign-line { width: 45%; border-top: 1px solid #000; padding-top: 5px; text-align: center; }
+        </style>
+      </head>
+      <body onload="setTimeout(function() { window.focus(); window.print(); }, 200);">
+        
+        <div class="header">
+          <img src="${logoUrl}" alt="Autocar BS">
+        </div>
+
+        <div class="title">CHECKLIST MECÂNICO RESPONSÁVEL PELO VEÍCULO</div>
+
+        <div class="section">
+          <div class="section-title">ENTRADA</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> necessidade de troca de óleo</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> colocar água no limpador de para-brisas</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> limpar reservatório de partida a frio</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> lavar o motor</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> trocar palhetas</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> lubrificar portas</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> regular freio de mão</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> trocar alguma lâmpada</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> TESTE DE BATERIA (Á NECESSIDADE)</div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">SAÍDA</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> executou as solicitações do cliente</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> Executou o checklist de itens</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> limpou marcas de graxa do veículo</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> separou peças usadas</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> testou o veículo</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> calibrou os pneus</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> apertou as rodas</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> colocou capinha dos parafusos de roda (calotinhas centrais)</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> fez o RESET da luz de aviso de manutenção do painel</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> fez ajuste da hora do painel</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> conferiu nível de fluido do freio</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> conferiu nível do óleo direção hidráulica</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> conferiu nível do liquido de arrefecimento</div>
+          <div class="item"><span class="box">( ) SIM &nbsp;&nbsp; ( ) NÃO</span> conferir protetor de cárter/ proteções plástico inferior</div>
+        </div>
+
+        <div class="footer">
+          ASSINATURA DO MECÂNICO RESPONSÁVEL APÓS CONCLUIR TODAS AS TAREFAS CITADAS ACIMA
+          <div class="signature-area">
+            <div class="sign-line">NOME DO MECÂNICO</div>
+            <div class="sign-line">DATA DA SAÍDA DO VEÍCULO &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;/&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
+          </div>
+        </div>
+
+      </body>
+      </html>
+    `;
+
+  const win = window.open("", "", "height=800,width=900");
+  win.document.write(htmlContent);
+  win.document.close();
+}
+
+// LIGANDO O BOTÃO DO MENU LATERAL:
+const btnMecanicoMenu = document.getElementById("btn-imprimir-mecanico-menu");
+
+if (btnMecanicoMenu) {
+  btnMecanicoMenu.addEventListener("click", () => {
+    // 1. Gera o PDF genérico (não precisa mais ler os dados da tela!)
+    gerarPDFChecklistMecanico();
+
+    // 2. Fecha a gaveta do menu lateral
+    const menuLateral = document.getElementById("menu-lateral");
+    const overlayMenu = document.getElementById("overlay-menu");
+    if (menuLateral) menuLateral.classList.remove("aberto");
+    if (overlayMenu) overlayMenu.classList.add("hidden");
+    document.body.style.overflow = "";
+  });
+}
+
+// ==========================================
+// FÁBRICA DE PDF: CHECKLIST DO MECÂNICO (ALINHAMENTO 100% CRAVADO)
+// ==========================================
+function gerarPDFChecklistMecanico() {
+  const logoUrl = new URL(
+    "img/logo-preta.png",
+    window.location.origin + window.location.pathname,
+  ).href;
+
+  const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <title>Checklist Técnico - Verso</title>
+        <style>
+          @page { size: A4 portrait; margin: 5mm; }
+          
+          html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0;
+          }
+          
+          body { 
+            font-family: 'Arial', sans-serif; 
+            font-size: 11px; 
+            color: #000; 
+            padding: 5mm; 
+            box-sizing: border-box;
+          }
+          
+          .container { 
+            border: 2px solid #000; 
+            padding: 10px 15px; 
+            height: 100%; 
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+          }
+          
+          .header { 
+            text-align: center; 
+            border-bottom: 2px solid #000; 
+            padding-bottom: 10px; 
+            margin-bottom: 10px; 
+            flex-shrink: 0; 
+          }
+          
+          .header img { height: 50px; }
+          
+          .main-title { 
+            text-align: center; 
+            font-size: 14px; 
+            font-weight: bold; 
+            background-color: #000; 
+            color: #fff; 
+            padding: 6px; 
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          
+          .section { 
+            border: 1px solid #000; 
+            margin-bottom: 10px; 
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1; 
+          }
+          
+          .section-title { 
+            background-color: #e5e5e5; 
+            padding: 5px; 
+            font-weight: bold; 
+            border-bottom: 1px solid #000; 
+            text-align: center;
+            font-size: 12px;
+            flex-shrink: 0;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          
+          .section-content { 
+            padding: 5px 10px; 
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            justify-content: space-evenly; 
+          }
+          
+          .item-row { 
+            display: flex; 
+            align-items: center; 
+            border-bottom: 1px dashed #ccc; 
+            padding: 4px 0; 
+          }
+          
+          .item-row:last-child { border-bottom: none; }
+          
+          .checkbox-group { 
+            width: 150px; 
+            white-space: nowrap; 
+            font-weight: bold; 
+            font-family: monospace; 
+            font-size: 12px; 
+            flex-shrink: 0;
+          }
+          
+          .item-text { 
+            flex: 1; 
+            text-transform: uppercase; 
+            font-size: 10px; 
+            font-weight: bold;
+            color: #222;
+          }
+          
+          .footer { 
+            margin-top: auto; 
+            padding-top: 10px; 
+            flex-shrink: 0;
+          }
+          
+          .footer-title {
+            text-align: center;
+            font-size: 11px;
+            font-weight: bold;
+            margin-bottom: 35px; 
+          }
+          
+          /* 👇 O SEGREDO DO ALINHAMENTO PERFEITO ESTÁ AQUI 👇 */
+          .signatures { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: flex-end; 
+            padding: 0 10px;
+          }
+          
+          /* A linha preta foi separada do texto */
+          .line-border { 
+            border-top: 1px solid #000; 
+            margin-bottom: 5px; /* Espacinho entre a linha e o texto embaixo */
+          }
+          
+          /* O lado da data ganha uma linha invisível para manter a matemática da altura igual */
+          .line-border.invisible { 
+            border-color: transparent; 
+          }
+          
+          /* O texto é sempre igual dos dois lados */
+          .sign-text { 
+            font-size: 11px;
+            font-weight: bold;
+            text-align: center;
+          }
+          /* 👆 ========================================= 👆 */
+        </style>
+      </head>
+      <body onload="setTimeout(function() { window.print(); }, 500);">
+        <div class="container">
+          
+          <div class="header">
+            <img src="${logoUrl}" alt="Autocar BS">
+          </div>
+
+          <div class="main-title">CHECKLIST MECÂNICO RESPONSÁVEL PELO VEÍCULO</div>
+
+          <div class="section">
+            <div class="section-title">VERIFICAÇÕES DE ENTRADA</div>
+            <div class="section-content">
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Necessidade de troca de óleo</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Colocar água no limpador de para-brisas</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Limpar reservatório de partida a frio</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Lavar o motor</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Trocar palhetas</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Lubrificar portas</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Regular freio de mão</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Trocar alguma lâmpada</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Teste de bateria (À necessidade)</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="section">
+            <div class="section-title">VERIFICAÇÕES DE SAÍDA</div>
+            <div class="section-content">
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Executou as solicitações do cliente</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Executou o checklist de itens</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Limpou marcas de graxa do veículo</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Separou peças usadas</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Testou o veículo</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Calibrou os pneus</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Apertou as rodas</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Colocou capinha dos parafusos de roda (calotinhas centrais)</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Fez o RESET da luz de aviso de manutenção do painel</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Fez ajuste da hora do painel</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Conferiu nível de fluido do freio</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Conferiu nível do óleo da direção hidráulica</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Conferiu nível do líquido de arrefecimento</span>
+              </div>
+              <div class="item-row">
+                <span class="checkbox-group">[ &nbsp;] SIM &nbsp;&nbsp; [ &nbsp;] NÃO</span>
+                <span class="item-text"> | Conferiu protetor de cárter / proteções de plástico inferior</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="footer">
+            <div class="footer-title">ASSINATURA DO MECÂNICO RESPONSÁVEL APÓS CONCLUIR TODAS AS TAREFAS CITADAS ACIMA</div>
+            <div class="signatures">
+              
+              <div class="sign-box">
+                <div class="sign-text">NOME DO MECÂNICO________________________________________________________________________________</div>
+              </div>
+              
+              <div class="sign-box">
+                <div class="sign-text">DATA DA SAÍDA: ____ / ____ / 20____</div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </body>
+      </html>
+    `;
+
+  const win = window.open("", "", "height=800,width=900");
+  win.document.write(htmlContent);
+  win.document.close();
 }
