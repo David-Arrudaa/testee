@@ -12,7 +12,7 @@
 }
 
 body.light-theme {
-  --bg-body: rgb(228, 224, 228); /* Fundo da página cinza bem claro */
+  --bg-body: rgb(233, 233, 233); /* Fundo da página cinza bem claro */
   --bg-card: #ffffff; /* Fundo dos cartões totalmente branco */
   --bg-input: #f3f4f6; /* Fundo das caixinhas de digitar um pouco mais cinza */
   --border: #d1d5db; /* Borda mais suave e clara */
@@ -70,7 +70,8 @@ main {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 20px;
+  padding: 30px 20px;
+  margin-top: 40px;
   background-color: var(--bg-card);
 
   /* 👇 A MUDANÇA ESTÁ AQUI 👇 */
