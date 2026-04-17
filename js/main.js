@@ -2787,7 +2787,7 @@ function gerarPDFChecklistMecanico() {
             <div class="signatures">
               
               <div class="sign-box">
-                <div class="sign-text">NOME DO MECÂNICO________________________________________________________________________________</div>
+                <div class="sign-text">NOME DO MECÂNICO____________________________________________________________________________</div>
               </div>
               
               <div class="sign-box">
