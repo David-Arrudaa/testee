@@ -222,7 +222,7 @@ function gerarPDFImpressao(dados, nivelCombustivel) {
           <div class="box-header">Detalhes da Entrada</div>
           <div class="box-content row">
             <div class="col" style="max-width: 250px;"><span class="label">DATA / HORA</span><span class="value">${dados.data_entrada} às ${dados.horario_entrada}</span></div>
-            <div class="col"><span class="label">MECÂNICO RESPONSÁVEL</span><span class="value">${dados.mecanico_responsavel || "-"}</span></div>
+            <div class="col"><span class="label">MRESPONSÁVEL PELO REGISTRO</span><span class="value">${dados.mecanico_responsavel || "-"}</span></div>
           </div>
         </div>
 
